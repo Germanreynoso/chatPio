@@ -1,6 +1,11 @@
 // Configuración de las URLs de la API
 export const API_CONFIG = {
-  BASE_URL: 'https://n8n.icc-e.org/webhook-test',
+  // URL de producción
+  BASE_URL: 'https://n8n.icc-e.org/webhook',
+  
+  // Para desarrollo local o pruebas
+  // BASE_URL: 'https://n8n.icc-e.org/webhook-test',
+  
   ENDPOINTS: {
     LOGIN: '/login',
     // Agregar más endpoints según sea necesario
