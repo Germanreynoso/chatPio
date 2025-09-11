@@ -75,10 +75,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
         method: 'POST',
+        ...API_CONFIG.CORS_CONFIG,
         headers: {
-          'Content-Type': 'application/json',
+          ...API_CONFIG.CORS_CONFIG.headers,
+          'Origin': window.location.origin,
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          action: 'login',  // Identificador de acción para el webhook
+          email, 
+          password,
+          timestamp: new Date().toISOString()
+        }),
         signal: controller.signal,
       });
 

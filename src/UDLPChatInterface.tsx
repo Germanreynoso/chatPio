@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { nanoid } from 'nanoid';
+import { API_CONFIG } from './config/api';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
 // Si estás usando una librería de Supabase en tu entorno, esta línea debería funcionar.
@@ -210,8 +211,8 @@ const UDLPChatInterface = () => {
 
     try {
       // 1. Envía los datos al webhook
-      const webhookUrl = 'https://n8n.icc-e.org/webhook-test/8585afbe-52ba-44e2-b000-6d4028b1b250';
-      const response = await fetch(webhookUrl, {
+      // Usar el método getFullUrl para construir la URL correctamente
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.CHAT), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
