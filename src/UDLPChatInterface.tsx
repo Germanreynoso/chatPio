@@ -25,6 +25,12 @@ type MessageType = {
   showActions?: boolean;
   success?: boolean;
   error?: boolean;
+  formData?: {
+    tema: string;
+    mensaje: string;
+    contexto: string;
+    audiencia: string;
+  };
 };
 
 type GeneratedContentType = {
@@ -96,11 +102,21 @@ const UDLPChatInterface = () => {
   }, [messages]);
 
   const addMessage = (message: Partial<MessageType>) => {
-    setMessages(prev => [...prev, {
-      ...message,
+    const newMessage: MessageType = {
       id: Date.now(),
-      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-    } as MessageType]);
+      type: message.type || 'bot',
+      content: message.content || '',
+      timestamp: new Date().toLocaleTimeString(),
+      showForm: message.showForm || false,
+      showContentForm: message.showContentForm || false,
+      loading: message.loading || false,
+      showActions: message.showActions || false,
+      success: message.success || false,
+      error: message.error || false,
+      ...message
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
   };
 
   const handleFormatChange = (format: string, checked: boolean) => {
@@ -199,7 +215,8 @@ const UDLPChatInterface = () => {
     
     addMessage({ 
       type: 'user', 
-      content: `Detalles:\n${summary}` 
+      content: `Detalles:\n${summary}`,
+      formData: { ...formData } // Guardar los datos del formulario
     });
     
     setIsGenerating(true);
@@ -276,6 +293,93 @@ const UDLPChatInterface = () => {
     }
   };
 
+  const handleRegenerate = async () => {
+    // Encontrar el último mensaje del usuario que contiene los datos del formulario
+    const lastUserMessage = [...messages].reverse().find(msg => 
+      msg.type === 'user' && msg.formData
+    );
+
+    if (!lastUserMessage?.formData) {
+      console.error('No se encontraron datos para regenerar');
+      addMessage({
+        type: 'bot',
+        content: 'No se pudo encontrar el contenido original para regenerar. Por favor, inténtalo de nuevo.',
+        error: true
+      });
+      return;
+    }
+
+    // Agregar mensaje de regeneración
+    addMessage({ 
+      type: 'user', 
+      content: '🔄 Regenerar contenido',
+      formData: { ...lastUserMessage.formData }
+    });
+    
+    addMessage({
+      type: 'bot',
+      content: '✨ Generando nueva versión del contenido...',
+      loading: true
+    });
+
+    try {
+      // Enviar solicitud al backend con un parámetro de regeneración
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.CHAT), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          area: selectedArea,
+          formats: selectedFormats,
+          languages: selectedLanguages,
+          details: lastUserMessage.formData,
+          regenerate: true, // Indicador de regeneración
+          timestamp: new Date().toISOString() // Asegura que cada solicitud sea única
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al regenerar el contenido');
+      }
+
+      const responseData = await response.json();
+      
+      if (!responseData?.ok || !responseData.data?.bot_response) {
+        throw new Error('Formato de respuesta inválido del servidor');
+      }
+
+      // Actualizar el mensaje con el nuevo contenido
+      setMessages(prev => {
+        const newMessages = [...prev];
+        // Reemplazar el mensaje de carga con el nuevo contenido
+        newMessages[newMessages.length - 1] = {
+          type: 'bot' as const,
+          content: 'He generado una nueva versión del contenido:',
+          generatedContent: [{
+            format: 'Nota de prensa',
+            title: 'Contenido generado',
+            content: responseData.data.bot_response
+          }],
+          showActions: true
+        };
+        return newMessages;
+      });
+
+    } catch (error) {
+      console.error("Error al regenerar contenido:", error);
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = {
+          type: 'bot' as const,
+          content: 'Lo siento, ha ocurrido un error al regenerar el contenido. Por favor, inténtalo de nuevo.',
+          error: true
+        };
+        return newMessages;
+      });
+    }
+  };
+
   const handleAction = (action: string) => {
     if (action === 'approve') {
       addMessage({ type: 'user', content: '✅ Aprobar y usar' });
@@ -285,21 +389,7 @@ const UDLPChatInterface = () => {
         success: true
       });
     } else if (action === 'regenerate') {
-      addMessage({ type: 'user', content: '🔄 Regenerar contenido' });
-      addMessage({
-        type: 'bot',
-        content: '✨ Regenerando contenido con nuevas variaciones...',
-        loading: true
-      });
-      
-      setTimeout(() => {
-        setMessages(prev => prev.slice(0, -1));
-        addMessage({
-          type: 'bot',
-          content: 'He generado nuevas versiones del contenido. ¿Qué te parecen ahora?',
-          showActions: true
-        });
-      }, 2000);
+      handleRegenerate();
     } else if (action === 'new') {
       addMessage({ type: 'user', content: '🆕 Crear otro contenido' });
       setTimeout(() => {
