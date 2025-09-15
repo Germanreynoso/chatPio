@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
-import { nanoid } from 'nanoid';
 import { API_CONFIG } from './config/api';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
@@ -25,6 +24,8 @@ type MessageType = {
   showActions?: boolean;
   success?: boolean;
   error?: boolean;
+  isEditing?: boolean;
+  editedContents?: string[];
   formData?: {
     tema: string;
     mensaje: string;
@@ -77,10 +78,10 @@ const UDLPChatInterface = () => {
     'Fundación UD', 'Hospitality', 'Infraestructuras', 'Internacional', 'Marketing'
   ];
   const formats = [
-    'Nota de prensa', 'Tweet', 'Instagram', 'YouTube Shorts', 'TikTok', 'Vídeo con avatar'
+    'Nota de prensa', 'Tweet', 'Instagram', 'YouTube Shorts', 'TikTok', 'Vídeo con avatar', 'LinkedIn'
   ];
   const contentTypeOptions = [
-    'Todos', 'Nota de prensa', 'Tweet', 'Instagram', 'YouTube Shorts', 'TikTok', 'Vídeo con avatar'
+    'Todos', 'Nota de prensa', 'Tweet', 'Instagram', 'YouTube Shorts', 'TikTok', 'Vídeo con avatar', 'LinkedIn'
   ];
 
   const audienceOptions = [
@@ -158,58 +159,18 @@ const UDLPChatInterface = () => {
     }, 500);
   };
 
-  const simulateContentGeneration = async (formData: {tema: string; mensaje: string; contexto: string; audiencia: string;}): Promise<GeneratedContentType[]> => {
-    const contentTemplates: Record<string, {title: string; content: string}> = {
-      'Nota de prensa': {
-        title: `Nota de prensa: ${formData.tema}`,
-        content: `**NOTA DE PRENSA**\n\n**UD LAS PALMAS - ${formData.tema.toUpperCase()}**\n\n${formData.mensaje}\n\nLa Unión Deportiva Las Palmas continúa demostrando su compromiso con ${formData.audiencia.toLowerCase()} a través de esta iniciativa que refuerza los valores del club.\n\n${formData.contexto ? `**Contexto adicional:**\n${formData.contexto}\n\n` : ''}Para más información:\nPrensa UD Las Palmas\nprensa@udlaspalmas.es\nTel: 928 123 456`
-      },
-      'Tweet': {
-        title: 'Tweet generado',
-        content: `🔥 ${formData.tema}\n\n${formData.mensaje}\n\n💛💙 #UDLasPalmas #VamosUD${formData.contexto ? `\n\n📍 ${formData.contexto.slice(0, 50)}...` : ''}`
-      },
-      'Instagram': {
-        title: 'Post de Instagram',
-        content: `✨ ${formData.tema} ✨\n\n${formData.mensaje}\n\n${formData.contexto ? `🔍 ${formData.contexto}\n\n` : ''}💛💙 Siempre unidos\n\n#UDLasPalmas #VamosUD #FuerzaUD #GranCanaria #Fútbol`
-      },
-      'TikTok': {
-        title: 'Guión para TikTok',
-        content: `🎬 GUIÓN TIKTOK: ${formData.tema}\n\n📝 Texto en pantalla: "${formData.mensaje}"\n\n🎵 Música sugerida: Himno UD Las Palmas (versión trending)\n\n📹 Escenas:\n1. Intro con logo UD (2s)\n2. Contenido principal (8s)\n3. Call to action final (2s)\n\n${formData.contexto ? `💡 Contexto: ${formData.contexto}` : ''}\n\n#UDLasPalmas #FútbolTikTok`
-      },
-      'YouTube Shorts': {
-        title: 'Guión para YouTube Shorts',
-        content: `🎥 YOUTUBE SHORTS: ${formData.tema}\n\n⏱️ Duración: 30-45 segundos\n\n📖 Guión:\n"¡Hola aficionados de la UD! ${formData.mensaje}"\n\n${formData.contexto ? `🔍 Detalles: ${formData.contexto}\n\n` : ''}📱 Llamada a la acción: "¡Suscríbete y activa la campanita!"\n\n#UDLasPalmas #YouTubeShorts #Fútbol`
-      },
-      'Vídeo con avatar': {
-        title: 'Script para vídeo con avatar',
-        content: `🤖 SCRIPT AVATAR: ${formData.tema}\n\n👨‍💼 Avatar: Representante oficial UD Las Palmas\n\n📢 Mensaje:\n"Hola, soy el portavoz digital de la UD Las Palmas.\n\n${formData.mensaje}\n\n${formData.contexto ? `Es importante destacar que ${formData.contexto}\n\n` : ''}Gracias por seguir apoyando a nuestro club. ¡Vamos UD!"\n\n⚙️ Configuración:\n- Tono: Profesional y cercano\n- Duración: 45-60 segundos\n- Fondo: Logo UD Las Palmas`
-      }
-    };
-
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
-
-    const generatedContent: GeneratedContentType[] = selectedFormats.map(format => {
-      const template = contentTemplates[format] || { title: format, content: `Contenido para ${format}: ${formData.mensaje}` };
-      return {
-        format,
-        ...template
-      };
-    });
-
-    return generatedContent;
-  };
 
   const handleContentSubmit = async (formData: {tema: string; mensaje: string; contexto: string; audiencia: string;}) => {
     const summary = Object.entries(formData)
-      .filter(([key, value]) => value && value.trim() !== '')
-      .map(([key, value]) => {
+      .filter(([, value]) => value && value.trim() !== '')
+      .map(([field, value]) => {
         const labels: Record<string, string> = {
           tema: 'Tema',
           mensaje: 'Mensaje clave',
           contexto: 'Contexto',
           audiencia: 'Audiencia'
         };
-        return `${labels[key] || key}: ${value}`;
+        return `${labels[field] || field}: ${value}`;
       })
       .join('\n');
     
@@ -293,92 +254,7 @@ const UDLPChatInterface = () => {
     }
   };
 
-  const handleRegenerate = async () => {
-    // Encontrar el último mensaje del usuario que contiene los datos del formulario
-    const lastUserMessage = [...messages].reverse().find(msg => 
-      msg.type === 'user' && msg.formData
-    );
-
-    if (!lastUserMessage?.formData) {
-      console.error('No se encontraron datos para regenerar');
-      addMessage({
-        type: 'bot',
-        content: 'No se pudo encontrar el contenido original para regenerar. Por favor, inténtalo de nuevo.',
-        error: true
-      });
-      return;
-    }
-
-    // Agregar mensaje de regeneración
-    addMessage({ 
-      type: 'user', 
-      content: '🔄 Regenerar contenido',
-      formData: { ...lastUserMessage.formData }
-    });
-    
-    addMessage({
-      type: 'bot',
-      content: '✨ Generando nueva versión del contenido...',
-      loading: true
-    });
-
-    try {
-      // Enviar solicitud al backend con un parámetro de regeneración
-      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.CHAT), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          area: selectedArea,
-          formats: selectedFormats,
-          languages: selectedLanguages,
-          details: lastUserMessage.formData,
-          regenerate: true, // Indicador de regeneración
-          timestamp: new Date().toISOString() // Asegura que cada solicitud sea única
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al regenerar el contenido');
-      }
-
-      const responseData = await response.json();
-      
-      if (!responseData?.ok || !responseData.data?.bot_response) {
-        throw new Error('Formato de respuesta inválido del servidor');
-      }
-
-      // Actualizar el mensaje con el nuevo contenido
-      setMessages(prev => {
-        const newMessages = [...prev];
-        // Reemplazar el mensaje de carga con el nuevo contenido
-        newMessages[newMessages.length - 1] = {
-          type: 'bot' as const,
-          content: 'He generado una nueva versión del contenido:',
-          generatedContent: [{
-            format: 'Nota de prensa',
-            title: 'Contenido generado',
-            content: responseData.data.bot_response
-          }],
-          showActions: true
-        };
-        return newMessages;
-      });
-
-    } catch (error) {
-      console.error("Error al regenerar contenido:", error);
-      setMessages(prev => {
-        const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = {
-          type: 'bot' as const,
-          content: 'Lo siento, ha ocurrido un error al regenerar el contenido. Por favor, inténtalo de nuevo.',
-          error: true
-        };
-        return newMessages;
-      });
-    }
-  };
+  
 
   const handleAction = (action: string) => {
     if (action === 'approve') {
@@ -388,8 +264,23 @@ const UDLPChatInterface = () => {
         content: '🚀 ¡Contenido aprobado y listo para usar! El contenido ha sido guardado en tu biblioteca.',
         success: true
       });
-    } else if (action === 'regenerate') {
-      handleRegenerate();
+    } else if (action === 'edit') {
+      // Activar modo edición en el último mensaje con contenido generado
+      setMessages(prev => {
+        const newMessages = [...prev];
+        for (let i = newMessages.length - 1; i >= 0; i--) {
+          const msg = newMessages[i];
+          if (msg.type === 'bot' && msg.generatedContent && msg.generatedContent.length > 0) {
+            newMessages[i] = {
+              ...msg,
+              isEditing: true,
+              editedContents: msg.generatedContent.map(g => g.content)
+            };
+            break;
+          }
+        }
+        return newMessages;
+      });
     } else if (action === 'new') {
       addMessage({ type: 'user', content: '🆕 Crear otro contenido' });
       setTimeout(() => {
@@ -699,6 +590,61 @@ const UDLPChatInterface = () => {
                     {message.generatedContent && (
                       <GeneratedContent content={message.generatedContent} />
                     )}
+
+                    {message.isEditing && message.generatedContent && Array.isArray(message.editedContents) && (
+                      <div className="mt-4 space-y-4">
+                        {message.generatedContent.map((item, index) => (
+                          <div key={index} className="border rounded-lg p-4 bg-white">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-semibold text-blue-600">{item.title}</h4>
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                {item.format}
+                              </span>
+                            </div>
+                            <textarea
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
+                              rows={8}
+                              value={message.editedContents?.[index] ?? ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setMessages(prev => prev.map(m => {
+                                  if (m.id !== message.id) return m;
+                                  const updated = m.editedContents ? [...m.editedContents] : [];
+                                  updated[index] = value;
+                                  return { ...m, editedContents: updated };
+                                }));
+                              }}
+                            />
+                          </div>
+                        ))}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setMessages(prev => prev.map(m => {
+                                if (m.id !== message.id) return m;
+                                if (!m.generatedContent || !m.editedContents) return m;
+                                const updatedGenerated = m.generatedContent.map((g, i) => ({
+                                  ...g,
+                                  content: m.editedContents![i]
+                                }));
+                                return { ...m, generatedContent: updatedGenerated, isEditing: false };
+                              }));
+                            }}
+                            className="p-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
+                          >
+                            💾 Guardar cambios
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMessages(prev => prev.map(m => m.id === message.id ? { ...m, isEditing: false } : m));
+                            }}
+                            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"
+                          >
+                            ✖️ Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     
                     {message.success && (
                       <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
@@ -724,10 +670,10 @@ const UDLPChatInterface = () => {
                           ✅ Aprobar y usar
                         </button>
                         <button
-                          onClick={() => handleAction('regenerate')}
+                          onClick={() => handleAction('edit')}
                           className="p-3 bg-udlp-blue hover:bg-blue-700 rounded-lg text-sm font-medium text-white border border-udlp-blue"
                         >
-                          🔄 Regenerar contenido
+                          ✏️ Editar contenido
                         </button>
                         <button
                           onClick={() => handleAction('new')}
