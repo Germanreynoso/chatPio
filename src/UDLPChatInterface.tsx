@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { API_CONFIG } from './config/api';
+import ImageGenerationModal from './components/image-generator/ImageGenerationModal';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
 // Si estás usando una librería de Supabase en tu entorno, esta línea debería funcionar.
@@ -69,6 +70,7 @@ const UDLPChatInterface = () => {
   ]);
   const [contentFilter, setContentFilter] = useState<string>('Todos');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [showImageModal, setShowImageModal] = useState<boolean>(false);
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -450,20 +452,22 @@ const UDLPChatInterface = () => {
           </select>
         </div>
 
-        <button
-          onClick={() => handleContentSubmit(formData)}
-          disabled={!isValid || isGenerating}
-          className="w-full bg-udlp-yellow text-udlp-dark py-2 px-4 rounded-lg hover:bg-yellow-400 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Generando contenido...
-            </>
-          ) : (
-            'Generar contenido'
-          )}
-        </button>
+        <div>
+          <button
+            onClick={() => handleContentSubmit(formData)}
+            disabled={!isValid || isGenerating}
+            className="w-full bg-udlp-yellow text-udlp-dark py-2 px-4 rounded-lg hover:bg-yellow-400 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Generando contenido...
+              </>
+            ) : (
+              'Generar contenido'
+            )}
+          </button>
+        </div>
       </div>
     );
   };
@@ -487,6 +491,7 @@ const UDLPChatInterface = () => {
   );
 
   return (
+    <>
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans">
       <div className="w-full md:w-80 bg-white shadow-lg flex-shrink-0">
         <div className="p-6 bg-udlp-blue text-white">
@@ -662,7 +667,7 @@ const UDLPChatInterface = () => {
                     {message.showContentForm && <ContentForm />}
                     
                     {message.showActions && (
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-4 gap-2">
                         <button
                           onClick={() => handleAction('approve')}
                           className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-sm font-medium text-green-700 border border-green-200"
@@ -674,6 +679,12 @@ const UDLPChatInterface = () => {
                           className="p-3 bg-udlp-blue hover:bg-blue-700 rounded-lg text-sm font-medium text-white border border-udlp-blue"
                         >
                           ✏️ Editar contenido
+                        </button>
+                        <button
+                          onClick={() => setShowImageModal(true)}
+                          className="p-3 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
+                        >
+                          🖼️ Crear imagen
                         </button>
                         <button
                           onClick={() => handleAction('new')}
@@ -696,6 +707,10 @@ const UDLPChatInterface = () => {
         </div>
       </div>
     </div>
+    {showImageModal && (
+      <ImageGenerationModal onClose={() => setShowImageModal(false)} />
+    )}
+    </>
   );
 };
 

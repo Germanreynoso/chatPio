@@ -1,0 +1,348 @@
+import React, { useState } from 'react';
+import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb } from 'lucide-react';
+
+type ImageGenerationModalProps = {
+  onClose: () => void;
+};
+
+const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) => {
+  const [characters, setCharacters] = useState('');
+  const [world, setWorld] = useState('');
+  const [action, setAction] = useState('');
+  const [visualStyle, setVisualStyle] = useState('');
+  const [sensoryElements, setSensoryElements] = useState('');
+  const [includeText, setIncludeText] = useState(false);
+  const [textContent, setTextContent] = useState('');
+  const [textPosition, setTextPosition] = useState('centro');
+  const [selectedFormat, setSelectedFormat] = useState('horizontal');
+  const [selectedResolution, setSelectedResolution] = useState('1920x1080');
+  const [selectedPlatform, setSelectedPlatform] = useState('general');
+  const [selectedModel, setSelectedModel] = useState('imagen4');
+  const [quality, setQuality] = useState('alta');
+
+  const formatos = [
+    { id: 'horizontal', nombre: 'Horizontal (16:9)', resolucion: '1920x1080', uso: 'YouTube, LinkedIn, web' },
+    { id: 'vertical', nombre: 'Vertical (9:16)', resolucion: '1080x1920', uso: 'Stories, TikTok, móvil' },
+    { id: 'cuadrado', nombre: 'Cuadrado (1:1)', resolucion: '1024x1024', uso: 'Instagram, Facebook' },
+    { id: 'banner', nombre: 'Banner (3:1)', resolucion: '1200x400', uso: 'Portadas, headers' },
+    { id: 'personalizado', nombre: 'Personalizado', resolucion: 'custom', uso: 'Dimensiones específicas' }
+  ];
+
+  const plataformas = [
+    { id: 'general', nombre: 'Uso general', optimizacion: 'Equilibrado para múltiples usos' },
+    { id: 'instagram', nombre: 'Instagram', optimizacion: 'Colores vibrantes, alta saturación' },
+    { id: 'linkedin', nombre: 'LinkedIn', optimizacion: 'Profesional, colores corporativos' },
+    { id: 'twitter', nombre: 'Twitter/X', optimizacion: 'Alto contraste, legible en miniatura' },
+    { id: 'web', nombre: 'Sitio web', optimizacion: 'SEO friendly, carga rápida' },
+    { id: 'print', nombre: 'Impresión', optimizacion: 'Alta resolución, CMYK compatible' }
+  ];
+
+  const modelos = [
+    { id: 'imagen4', nombre: 'Google Imagen 4', descripcion: 'Excelente con texto, último modelo', coste: '0.02$' },
+    { id: 'dalle3', nombre: 'DALL-E 3', descripcion: 'OpenAI, buena creatividad', coste: '0.04$' },
+    { id: 'midjourney', nombre: 'Midjourney v6', descripcion: 'Artístico y detallado', coste: '0.03$' },
+    { id: 'banana', nombre: 'Nano Banana', descripcion: 'Rápido y económico', coste: '0.01$' }
+  ];
+
+  const handleFormatChange = (formatId: string) => {
+    const format = formatos.find(f => f.id === formatId);
+    setSelectedFormat(formatId);
+    if (format && format.resolucion !== 'custom') {
+      setSelectedResolution(format.resolucion);
+    }
+  };
+
+  const generarPromptCompleto = () => {
+    const sections: string[] = [];
+    if (characters.trim()) sections.push(`Personajes/Sujetos: ${characters}`);
+    if (world.trim()) sections.push(`Escenario/Mundo: ${world}`);
+    if (action.trim()) sections.push(`Acción/Composición: ${action}`);
+    if (visualStyle.trim()) sections.push(`Estilo Visual: ${visualStyle}`);
+    if (sensoryElements.trim()) sections.push(`Elementos Sensoriales: ${sensoryElements}`);
+    if (includeText && textContent.trim()) sections.push(`Texto a incluir: "${textContent}" (posición: ${textPosition})`);
+    return sections.join('. ') || 'Complete los campos para generar el prompt...';
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative max-w-5xl w-full mx-4 bg-white rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Image className="text-green-600" />
+            Generar imagen con prompting efectivo
+          </h2>
+          <p className="text-gray-600 mt-1">Usa los 5 principios de prompting efectivo para crear imágenes profesionales de alta calidad</p>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="w-5 h-5 text-blue-600" />
+              <h3 className="font-medium text-blue-900">5 tips para prompting efectivo</h3>
+            </div>
+            <p className="text-sm text-blue-700">
+              Completa cada sección con detalles específicos para obtener mejores resultados. Cuanta más información proporciones, más precisa será la imagen generada.
+            </p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              <Users className="inline w-5 h-5 mr-2 text-blue-600" />
+              1. Define tus personajes/sujetos principales
+            </label>
+            <textarea
+              value={characters}
+              onChange={(e) => setCharacters(e.target.value)}
+              placeholder="Ejemplo: Un empresario de 40 años con traje azul marino, expresión confiada y postura profesional. Cabello corto y gafas modernas. Una mujer joven con laptop, vestimenta casual-elegante..."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px]"
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Describe apariencia, vestimenta, expresiones, posturas y características específicas. {characters.length}/500 caracteres
+            </p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              <Globe2 className="inline w-5 h-5 mr-2 text-purple-600" />
+              2. Construye el escenario/mundo
+            </label>
+            <textarea
+              value={world}
+              onChange={(e) => setWorld(e.target.value)}
+              placeholder="Ejemplo: Oficina moderna con ventanales amplios, iluminación natural suave, plantas verdes, escritorios de madera clara, ambiente minimalista y profesional. Ciudad al fondo..."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-h-[80px]"
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Describe el entorno, iluminación, textura, atmósfera y detalles del escenario. {world.length}/500 caracteres
+            </p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              <Zap className="inline w-5 h-5 mr-2 text-orange-600" />
+              3. Define la acción/composición detallada
+            </label>
+            <textarea
+              value={action}
+              onChange={(e) => setAction(e.target.value)}
+              placeholder="Ejemplo: Los personajes están en una reunión colaborativa, uno señalando una presentación en pantalla, otros tomando notas. Composición en regla de tercios, perspectiva ligeramente elevada..."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 min-h-[80px]"
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Especifica qué están haciendo, cómo están posicionados, ángulos de cámara y composición. {action.length}/500 caracteres
+            </p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              <Palette className="inline w-5 h-5 mr-2 text-green-600" />
+              4. Define el estilo visual único
+            </label>
+            <textarea
+              value={visualStyle}
+              onChange={(e) => setVisualStyle(e.target.value)}
+              placeholder="Ejemplo: Fotografía corporativa profesional, estilo realista, colores corporativos azul y blanco, acabado limpio y moderno, similar a campañas de LinkedIn..."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[80px]"
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              ¿Es realista, ilustrado, fotográfico? ¿Qué estilo artístico o referencia visual? {visualStyle.length}/500 caracteres
+            </p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              <Eye className="inline w-5 h-5 mr-2 text-red-600" />
+              5. Elementos sensoriales/ambientales
+            </label>
+            <textarea
+              value={sensoryElements}
+              onChange={(e) => setSensoryElements(e.target.value)}
+              placeholder="Ejemplo: Sensación de productividad y colaboración, textura suave en materiales, luz cálida de atardecer, colores que transmiten confianza y profesionalidad..."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[80px]"
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Describe texturas, mood, sensaciones, temperatura de color, emociones que debe transmitir. {sensoryElements.length}/500 caracteres
+            </p>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                id="includeText"
+                checked={includeText}
+                onChange={(e) => setIncludeText(e.target.checked)}
+                className="mr-3 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              />
+              <label htmlFor="includeText" className="text-sm font-medium text-gray-700 flex items-center">
+                <Type className="inline w-4 h-4 mr-1" />
+                Incluir texto en la imagen
+              </label>
+            </div>
+            {includeText && (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Texto a incluir</label>
+                  <input
+                    type="text"
+                    value={textContent}
+                    onChange={(e) => setTextContent(e.target.value)}
+                    placeholder="Ejemplo: MMI Analytics, Innovación que Transforma, etc."
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Posición del texto</label>
+                  <select 
+                    value={textPosition}
+                    onChange={(e) => setTextPosition(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="centro">Centro</option>
+                    <option value="superior">Parte superior</option>
+                    <option value="inferior">Parte inferior</option>
+                    <option value="izquierda">Izquierda</option>
+                    <option value="derecha">Derecha</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              <Layout className="inline w-4 h-4 mr-1" />
+              Formato y dimensiones
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Formato</label>
+                <select 
+                  value={selectedFormat}
+                  onChange={(e) => handleFormatChange(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  {formatos.map((formato) => (
+                    <option key={formato.id} value={formato.id}>
+                      {formato.nombre} - {formato.uso}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Resolución</label>
+                <input
+                  type="text"
+                  value={selectedResolution}
+                  onChange={(e) => setSelectedResolution(e.target.value)}
+                  disabled={selectedFormat !== 'personalizado'}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100"
+                  placeholder="1920x1080"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Configuración técnica
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Plataforma destino</label>
+                <select 
+                  value={selectedPlatform}
+                  onChange={(e) => setSelectedPlatform(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  {plataformas.map((plat) => (
+                    <option key={plat.id} value={plat.id}>{plat.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Modelo de IA</label>
+                <select 
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  {modelos.map((modelo) => (
+                    <option key={modelo.id} value={modelo.id}>
+                      {modelo.nombre} ({modelo.coste})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Calidad</label>
+                <select 
+                  value={quality}
+                  onChange={(e) => setQuality(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="estandar">Estándar (más rápido)</option>
+                  <option value="alta">Alta (recomendado)</option>
+                  <option value="maxima">Máxima (más lento)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h4 className="font-medium text-gray-800 mb-2 flex items-center">
+              <FileImage className="w-4 h-4 mr-1" />
+              Prompt final generado
+            </h4>
+            <div className="text-sm text-gray-600 bg-white p-3 rounded border max-h-40 overflow-y-auto">
+              {generarPromptCompleto()}
+            </div>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-medium text-green-800 mb-2">💰 Información de coste</h4>
+            <p className="text-sm text-green-700">
+              Coste estimado: {modelos.find(m => m.id === selectedModel)?.coste} por imagen generada.
+              {quality === 'maxima' && ' Calidad máxima puede aumentar el coste un 50%.'}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+            <button className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Generar imagen
+            </button>
+            <button className="bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
+              Vista previa
+            </button>
+            <button onClick={onClose} className="bg-gray-200 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-300 transition-colors">
+              Cancelar
+            </button>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-800 mb-2">💡 Tips adicionales para mejores resultados</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• <strong>Sé específico:</strong> "Luz natural suave" es mejor que "buena iluminación"</li>
+              <li>• <strong>Usa referencias:</strong> "Estilo corporativo como LinkedIn" da contexto claro</li>
+              <li>• <strong>Para logos/texto:</strong> Google Imagen 4 tiene el mejor rendimiento</li>
+              <li>• <strong>Combina elementos:</strong> Cada campo se suma para crear el prompt final</li>
+              <li>• <strong>Experimenta:</strong> Puedes ajustar cualquier campo y regenerar</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ImageGenerationModal;
+
