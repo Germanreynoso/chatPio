@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb } from 'lucide-react';
 
 export interface ImageGenerationModalProps {
   onClose: () => void;
+  initialData?: any;
 }
 
-export default function ImageGenerationModal({ onClose }: ImageGenerationModalProps) {
+export default function ImageGenerationModal({ onClose, initialData }: ImageGenerationModalProps) {
   const [characters, setCharacters] = useState('');
   const [world, setWorld] = useState('');
   const [action, setAction] = useState('');
@@ -19,6 +20,72 @@ export default function ImageGenerationModal({ onClose }: ImageGenerationModalPr
   const [selectedPlatform, setSelectedPlatform] = useState('general');
   const [selectedModel, setSelectedModel] = useState('imagen4');
   const [quality, setQuality] = useState('alta');
+
+  // Prefill fields when initialData is provided
+  useEffect(() => {
+    if (!initialData) return;
+    const d = initialData;
+    // Keys as labels from backend (Spanish phrases)
+    if (typeof d["Define tus personajes/sujetos principales"] === 'string') setCharacters(d["Define tus personajes/sujetos principales"]);
+    if (typeof d["Construye el escenario/mundo"] === 'string') setWorld(d["Construye el escenario/mundo"]);
+    if (typeof d["Define la acción/composición detallada"] === 'string') setAction(d["Define la acción/composición detallada"]);
+    if (typeof d["Define el estilo visual único"] === 'string') setVisualStyle(d["Define el estilo visual único"]);
+    if (typeof d["Elementos sensoriales/ambientales"] === 'string') setSensoryElements(d["Elementos sensoriales/ambientales"]);
+
+    if (typeof d.characters === 'string') setCharacters(d.characters);
+    if (typeof d.personajes === 'string') setCharacters(d.personajes);
+    if (typeof d.world === 'string') setWorld(d.world);
+    if (typeof d.escenario === 'string') setWorld(d.escenario);
+    if (typeof d.action === 'string') setAction(d.action);
+    if (typeof d.composicion === 'string') setAction(d.composicion);
+    if (typeof d.visualStyle === 'string') setVisualStyle(d.visualStyle);
+    if (typeof d.estilo === 'string') setVisualStyle(d.estilo);
+    if (typeof d.sensoryElements === 'string') setSensoryElements(d.sensoryElements);
+    if (typeof d.sensorial === 'string') setSensoryElements(d.sensorial);
+    if (typeof d.includeText === 'boolean') setIncludeText(d.includeText);
+    if (typeof d.incluirTexto === 'boolean') setIncludeText(d.incluirTexto);
+    if (typeof d.textContent === 'string') setTextContent(d.textContent);
+    if (typeof d.texto === 'string') setTextContent(d.texto);
+    if (typeof d.textPosition === 'string') setTextPosition(d.textPosition);
+    if (typeof d.posicionTexto === 'string') setTextPosition(d.posicionTexto);
+    // Map incoming human-readable format to internal id
+    const mapFormatLabelToId = (val: string): string | null => {
+      const v = val.toLowerCase();
+      if (v.includes('horizontal')) return 'horizontal';
+      if (v.includes('vertical')) return 'vertical';
+      if (v.includes('cuadrado') || v.includes('1:1')) return 'cuadrado';
+      if (v.includes('banner') || v.includes('3:1')) return 'banner';
+      if (v.includes('personal')) return 'personalizado';
+      return null;
+    };
+    if (typeof d.selectedFormat === 'string') {
+      const id = mapFormatLabelToId(d.selectedFormat) || d.selectedFormat;
+      handleFormatChange(id);
+    }
+    if (typeof d.formato === 'string') {
+      const id = mapFormatLabelToId(d.formato) || d.formato;
+      handleFormatChange(id);
+    }
+    if (typeof d.selectedResolution === 'string') setSelectedResolution(d.selectedResolution);
+    if (typeof d.resolucion === 'string') setSelectedResolution(d.resolucion);
+    // Platforms mapping (ids: general, instagram, linkedin, twitter, web, print)
+    const mapPlatformToId = (val: string): string => {
+      const v = (val || '').toString().toLowerCase();
+      if (v.includes('instagram')) return 'instagram';
+      if (v.includes('linkedin')) return 'linkedin';
+      if (v.includes('twitter') || v === 'x') return 'twitter';
+      if (v.includes('web') || v.includes('sitio')) return 'web';
+      if (v.includes('impres')) return 'print';
+      return 'general';
+    };
+    if (typeof d.selectedPlatform === 'string') setSelectedPlatform(mapPlatformToId(d.selectedPlatform));
+    if (typeof d.plataforma === 'string') setSelectedPlatform(mapPlatformToId(d.plataforma));
+    if (typeof d.plataforma_destino === 'string') setSelectedPlatform(mapPlatformToId(d.plataforma_destino));
+    if (typeof d.selectedModel === 'string') setSelectedModel(d.selectedModel);
+    if (typeof d.modelo === 'string') setSelectedModel(d.modelo);
+    if (typeof d.quality === 'string') setQuality(d.quality);
+    if (typeof d.calidad === 'string') setQuality(d.calidad);
+  }, [initialData]);
 
   const formatos = [
     { id: 'horizontal', nombre: 'Horizontal (16:9)', resolucion: '1920x1080', uso: 'YouTube, LinkedIn, web' },

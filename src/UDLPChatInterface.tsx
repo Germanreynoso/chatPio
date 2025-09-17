@@ -71,6 +71,7 @@ const UDLPChatInterface = () => {
   const [contentFilter, setContentFilter] = useState<string>('Todos');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [imagePromptData, setImagePromptData] = useState<any | null>(null);
   const [lastFormData, setLastFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number} | null>(null);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
   
@@ -253,6 +254,20 @@ const UDLPChatInterface = () => {
         throw new Error('Formato de respuesta inválido del servidor');
       }
 
+      // Prep: guardar image_prompt_data si viene del backend
+      try {
+        const rawImg = responseData.data.image_prompt_data;
+        if (typeof rawImg === 'string') {
+          setImagePromptData(JSON.parse(rawImg));
+        } else if (rawImg) {
+          setImagePromptData(rawImg);
+        } else {
+          setImagePromptData(null);
+        }
+      } catch {
+        setImagePromptData(null);
+      }
+
       // 4. Formatear la respuesta para que coincida con lo que espera la interfaz
       const selectedFormatLabel = selectedFormats.length === 1 
         ? selectedFormats[0] 
@@ -327,6 +342,18 @@ const UDLPChatInterface = () => {
       const responseData = await response.json();
       if (!responseData?.ok || !responseData.data?.bot_response) {
         throw new Error('Formato de respuesta inválido del servidor');
+      }
+
+      // Prep: actualizar image_prompt_data si llega en refinado
+      try {
+        const rawImg = responseData.data.image_prompt_data;
+        if (typeof rawImg === 'string') {
+          setImagePromptData(JSON.parse(rawImg));
+        } else if (rawImg) {
+          setImagePromptData(rawImg);
+        }
+      } catch {
+        // ignore
       }
 
       const generatedContent = [{
@@ -890,7 +917,7 @@ const UDLPChatInterface = () => {
       </div>
     </div>
     {showImageModal && (
-      <ImageGenerationModal onClose={() => setShowImageModal(false)} />
+      <ImageGenerationModal onClose={() => setShowImageModal(false)} initialData={imagePromptData || undefined} />
     )}
     </>
   );
