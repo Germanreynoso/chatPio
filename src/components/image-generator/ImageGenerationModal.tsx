@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb } from 'lucide-react';
 
-type ImageGenerationModalProps = {
+export interface ImageGenerationModalProps {
   onClose: () => void;
-};
+}
 
-const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) => {
+export default function ImageGenerationModal({ onClose }: ImageGenerationModalProps) {
   const [characters, setCharacters] = useState('');
   const [world, setWorld] = useState('');
   const [action, setAction] = useState('');
@@ -66,36 +66,36 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative max-w-5xl w-full mx-4 bg-white rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
+      <div className="relative max-w-5xl w-full mx-4 bg-white rounded-2xl shadow-udlp-lg ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200 bg-white rounded-t-2xl">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Image className="text-green-600" />
+            <Image className="text-udlp-blue" />
             Generar imagen con prompting efectivo
           </h2>
-          <p className="text-gray-600 mt-1">Usa los 5 principios de prompting efectivo para crear imágenes profesionales de alta calidad</p>
+          <p className="text-sm text-gray-600 mt-1">Usa los 5 principios de prompting efectivo para crear imágenes profesionales de alta calidad</p>
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 text-blue-600" />
               <h3 className="font-medium text-blue-900">5 tips para prompting efectivo</h3>
             </div>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-blue-800">
               Completa cada sección con detalles específicos para obtener mejores resultados. Cuanta más información proporciones, más precisa será la imagen generada.
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Users className="inline w-5 h-5 mr-2 text-blue-600" />
+              <Users className="inline w-5 h-5 mr-2 text-udlp-blue" />
               1. Define tus personajes/sujetos principales
             </label>
             <textarea
               value={characters}
               onChange={(e) => setCharacters(e.target.value)}
               placeholder="Ejemplo: Un empresario de 40 años con traje azul marino, expresión confiada y postura profesional. Cabello corto y gafas modernas. Una mujer joven con laptop, vestimenta casual-elegante..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px]"
+              className="w-full p-3 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow min-h-[80px]"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -103,16 +103,16 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Globe2 className="inline w-5 h-5 mr-2 text-purple-600" />
+              <Globe2 className="inline w-5 h-5 mr-2 text-udlp-blue" />
               2. Construye el escenario/mundo
             </label>
             <textarea
               value={world}
               onChange={(e) => setWorld(e.target.value)}
               placeholder="Ejemplo: Oficina moderna con ventanales amplios, iluminación natural suave, plantas verdes, escritorios de madera clara, ambiente minimalista y profesional. Ciudad al fondo..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-h-[80px]"
+              className="w-full p-3 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow min-h-[80px]"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -120,16 +120,16 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Zap className="inline w-5 h-5 mr-2 text-orange-600" />
+              <Zap className="inline w-5 h-5 mr-2 text-udlp-blue" />
               3. Define la acción/composición detallada
             </label>
             <textarea
               value={action}
               onChange={(e) => setAction(e.target.value)}
               placeholder="Ejemplo: Los personajes están en una reunión colaborativa, uno señalando una presentación en pantalla, otros tomando notas. Composición en regla de tercios, perspectiva ligeramente elevada..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 min-h-[80px]"
+              className="w-full p-3 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow min-h-[80px]"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -137,16 +137,16 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Palette className="inline w-5 h-5 mr-2 text-green-600" />
+              <Palette className="inline w-5 h-5 mr-2 text-udlp-blue" />
               4. Define el estilo visual único
             </label>
             <textarea
               value={visualStyle}
               onChange={(e) => setVisualStyle(e.target.value)}
               placeholder="Ejemplo: Fotografía corporativa profesional, estilo realista, colores corporativos azul y blanco, acabado limpio y moderno, similar a campañas de LinkedIn..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[80px]"
+              className="w-full p-3 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow min-h-[80px]"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -154,16 +154,16 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+          <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors bg-white">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Eye className="inline w-5 h-5 mr-2 text-red-600" />
+              <Eye className="inline w-5 h-5 mr-2 text-udlp-blue" />
               5. Elementos sensoriales/ambientales
             </label>
             <textarea
               value={sensoryElements}
               onChange={(e) => setSensoryElements(e.target.value)}
               placeholder="Ejemplo: Sensación de productividad y colaboración, textura suave en materiales, luz cálida de atardecer, colores que transmiten confianza y profesionalidad..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[80px]"
+              className="w-full p-3 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow min-h-[80px]"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -171,17 +171,17 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
             </p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4">
+          <div className="border border-gray-200 rounded-lg p-4 bg-white">
             <div className="flex items-center mb-3">
               <input
                 type="checkbox"
                 id="includeText"
                 checked={includeText}
                 onChange={(e) => setIncludeText(e.target.checked)}
-                className="mr-3 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                className="mr-3 h-4 w-4 text-udlp-yellow focus:ring-udlp-yellow border-gray-300 rounded"
               />
               <label htmlFor="includeText" className="text-sm font-medium text-gray-700 flex items-center">
-                <Type className="inline w-4 h-4 mr-1" />
+                <Type className="inline w-4 h-4 mr-1 text-udlp-blue" />
                 Incluir texto en la imagen
               </label>
             </div>
@@ -194,7 +194,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                     value={textContent}
                     onChange={(e) => setTextContent(e.target.value)}
                     placeholder="Ejemplo: MMI Analytics, Innovación que Transforma, etc."
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-2 border border-gray-300 bg-white text-gray-900 placeholder-gray-500 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow"
                     maxLength={100}
                   />
                 </div>
@@ -203,7 +203,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                   <select 
                     value={textPosition}
                     onChange={(e) => setTextPosition(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow"
                   >
                     <option value="centro">Centro</option>
                     <option value="superior">Parte superior</option>
@@ -218,7 +218,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <Layout className="inline w-4 h-4 mr-1" />
+              <Layout className="inline w-4 h-4 mr-1 text-udlp-blue" />
               Formato y dimensiones
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,7 +227,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                 <select 
                   value={selectedFormat}
                   onChange={(e) => handleFormatChange(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow"
                 >
                   {formatos.map((formato) => (
                     <option key={formato.id} value={formato.id}>
@@ -243,7 +243,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                   value={selectedResolution}
                   onChange={(e) => setSelectedResolution(e.target.value)}
                   disabled={selectedFormat !== 'personalizado'}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100"
+                  className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow disabled:bg-gray-100 disabled:text-gray-500"
                   placeholder="1920x1080"
                 />
               </div>
@@ -252,7 +252,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
 
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <Settings className="w-5 h-5" />
+              <Settings className="w-5 h-5 text-udlp-blue" />
               Configuración técnica
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -261,7 +261,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                 <select 
                   value={selectedPlatform}
                   onChange={(e) => setSelectedPlatform(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow"
                 >
                   {plataformas.map((plat) => (
                     <option key={plat.id} value={plat.id}>{plat.nombre}</option>
@@ -273,7 +273,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                 <select 
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow"
                 >
                   {modelos.map((modelo) => (
                     <option key={modelo.id} value={modelo.id}>
@@ -287,7 +287,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                 <select 
                   value={quality}
                   onChange={(e) => setQuality(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full p-2 border border-gray-300 bg-white text-gray-900 rounded-md focus:ring-2 focus:ring-udlp-yellow focus:border-udlp-yellow"
                 >
                   <option value="estandar">Estándar (más rápido)</option>
                   <option value="alta">Alta (recomendado)</option>
@@ -297,12 +297,12 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
             </div>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-2 flex items-center">
-              <FileImage className="w-4 h-4 mr-1" />
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+              <FileImage className="w-4 h-4 mr-1 text-udlp-blue" />
               Prompt final generado
             </h4>
-            <div className="text-sm text-gray-600 bg-white p-3 rounded border max-h-40 overflow-y-auto">
+            <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded border max-h-40 overflow-y-auto">
               {generarPromptCompleto()}
             </div>
           </div>
@@ -320,10 +320,10 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
               <Sparkles className="w-4 h-4" />
               Generar imagen
             </button>
-            <button className="bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
+            <button className="bg-udlp-blue text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
               Vista previa
             </button>
-            <button onClick={onClose} className="bg-gray-200 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-300 transition-colors">
+            <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors border border-gray-200">
               Cancelar
             </button>
           </div>
@@ -342,7 +342,5 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
       </div>
     </div>
   );
-};
-
-export default ImageGenerationModal;
+}
 

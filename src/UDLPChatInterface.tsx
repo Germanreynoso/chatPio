@@ -63,14 +63,16 @@ const UDLPChatInterface = () => {
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['Español']);
   const [recentContents, setRecentContents] = useState<RecentContentType[]>([
-    { area: 'Fundación UD', format: 'Instagram', topic: 'Visita hospital infantil', time: '2h' },
-    { area: 'Hospitality', format: 'Nota de prensa', topic: 'Nuevo menú VIP', time: '5h' },
-    { area: 'Cantera', format: 'TikTok', topic: 'Entrenamiento juvenil', time: '1d' },
-    { area: 'Internacional', format: 'Tweet', topic: 'Acuerdo con Santos FC', time: '2d' }
+    { area: 'Fundación UD', format: 'instagram', topic: 'Visita hospital infantil', time: '2h' },
+    { area: 'Hospitality', format: 'nota de prensa', topic: 'Nuevo menú VIP', time: '5h' },
+    { area: 'Cantera', format: 'video', topic: 'Entrenamiento juvenil', time: '1d' },
+    { area: 'Internacional', format: 'tweeter', topic: 'Acuerdo con Santos FC', time: '2d' }
   ]);
   const [contentFilter, setContentFilter] = useState<string>('Todos');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [lastFormData, setLastFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number} | null>(null);
+  const [refinePrompt, setRefinePrompt] = useState<string>("");
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -80,10 +82,27 @@ const UDLPChatInterface = () => {
     'Fundación UD', 'Hospitality', 'Infraestructuras', 'Internacional', 'Marketing'
   ];
   const formats = [
-    'Nota de prensa', 'Tweet', 'Instagram', 'YouTube Shorts', 'TikTok', 'Vídeo con avatar', 'LinkedIn'
+    'Nota de prensa',
+    'X',
+    'Linkedin',
+    'Instagram',
+    'Facebook',
+    'Audio/podcast',
+    'Video con avatar',
+    'Video',
+    'Imagen',
   ];
   const contentTypeOptions = [
-    'Todos', 'Nota de prensa', 'Tweet', 'Instagram', 'YouTube Shorts', 'TikTok', 'Vídeo con avatar', 'LinkedIn'
+    'Todos',
+    'Nota de prensa',
+    'X',
+    'Linkedin',
+    'Instagram',
+    'Facebook',
+    'Audio/podcast',
+    'Video con avatar',
+    'Video',
+    'Imagen',
   ];
 
   const audienceOptions = [
@@ -152,6 +171,12 @@ const UDLPChatInterface = () => {
     const summary = `Área: ${selectedArea}\nFormatos: ${selectedFormats.join(', ')}\nIdiomas: ${selectedLanguages.join(', ')}`;
     addMessage({ type: 'user', content: summary });
 
+    // Si el usuario selecciona Imagen como formato, abrir el generador de imágenes
+    if (selectedFormats.includes('Imagen')) {
+      setShowImageModal(true);
+      return;
+    }
+
     setTimeout(() => {
       addMessage({
         type: 'bot',
@@ -162,17 +187,22 @@ const UDLPChatInterface = () => {
   };
 
 
-  const handleContentSubmit = async (formData: {tema: string; mensaje: string; contexto: string; audiencia: string;}) => {
+  const handleContentSubmit = async (formData: {tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number;}) => {
     const summary = Object.entries(formData)
-      .filter(([, value]) => value && value.trim() !== '')
+      .filter(([, value]) => {
+        if (value === undefined || value === null) return false;
+        if (typeof value === 'string') return value.trim() !== '';
+        return true;
+      })
       .map(([field, value]) => {
         const labels: Record<string, string> = {
           tema: 'Tema',
           mensaje: 'Mensaje clave',
           contexto: 'Contexto',
-          audiencia: 'Audiencia'
+          audiencia: 'Audiencia',
+          wordCount: 'Cantidad de palabras'
         };
-        return `${labels[field] || field}: ${value}`;
+        return `${labels[field] || field}: ${String(value)}`;
       })
       .join('\n');
     
@@ -181,6 +211,7 @@ const UDLPChatInterface = () => {
       content: `Detalles:\n${summary}`,
       formData: { ...formData } // Guardar los datos del formulario
     });
+    setLastFormData(formData);
     
     setIsGenerating(true);
     addMessage({
@@ -202,6 +233,10 @@ const UDLPChatInterface = () => {
           formats: selectedFormats,
           languages: selectedLanguages,
           details: formData,
+          // Enviar explícitamente la cantidad de palabras al backend cuando aplique
+          wordCount: selectedFormats.includes('Nota de prensa')
+            ? (formData.wordCount ?? undefined)
+            : undefined,
         }),
       });
 
@@ -219,8 +254,11 @@ const UDLPChatInterface = () => {
       }
 
       // 4. Formatear la respuesta para que coincida con lo que espera la interfaz
+      const selectedFormatLabel = selectedFormats.length === 1 
+        ? selectedFormats[0] 
+        : selectedFormats.join(', ');
       const generatedContent = [{
-        format: 'Nota de prensa',
+        format: selectedFormatLabel,
         title: 'Contenido generado',
         content: responseData.data.bot_response
       }];
@@ -249,6 +287,68 @@ const UDLPChatInterface = () => {
       addMessage({
         type: 'bot',
         content: 'Lo siento, ha ocurrido un error al generar o enviar el contenido. Por favor, inténtalo de nuevo.',
+        error: true
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRefineSubmit = async () => {
+    if (!lastFormData || refinePrompt.trim() === '') return;
+    setIsGenerating(true);
+    addMessage({
+      type: 'bot',
+      content: '✨ Refinando contenido...',
+      loading: true
+    });
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.CHAT), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          area: selectedArea,
+          formats: selectedFormats,
+          languages: selectedLanguages,
+          details: lastFormData,
+          refinePrompt: refinePrompt,
+          // Mantener cantidad de palabras en solicitudes de refinado si aplica
+          wordCount: selectedFormats.includes('Nota de prensa')
+            ? (lastFormData.wordCount ?? undefined)
+            : undefined,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al refinar contenido');
+      }
+
+      const responseData = await response.json();
+      if (!responseData?.ok || !responseData.data?.bot_response) {
+        throw new Error('Formato de respuesta inválido del servidor');
+      }
+
+      const generatedContent = [{
+        format: selectedFormats.length === 1 ? selectedFormats[0] : selectedFormats.join(', '),
+        title: 'Contenido refinado',
+        content: responseData.data.bot_response
+      }];
+
+      setMessages(prev => prev.slice(0, -1));
+      addMessage({
+        type: 'bot',
+        content: 'He refinado el contenido según tus indicaciones:',
+        generatedContent: generatedContent,
+        showActions: true
+      });
+      setRefinePrompt("");
+    } catch (error) {
+      console.error('Error al refinar contenido:', error);
+      setMessages(prev => prev.slice(0, -1));
+      addMessage({
+        type: 'bot',
+        content: 'Ocurrió un error al refinar el contenido. Inténtalo nuevamente.',
         error: true
       });
     } finally {
@@ -376,6 +476,9 @@ const UDLPChatInterface = () => {
       contexto: '',
       audiencia: ''
     });
+    const [wordCount, setWordCount] = useState<number>(800);
+    const [wordCountMode, setWordCountMode] = useState<'short' | 'medium' | 'long' | 'custom'>('medium');
+    const [customWordCount, setCustomWordCount] = useState<number>(1200);
 
     const handleInputChange = (name: string, value: string) => {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -401,6 +504,61 @@ const UDLPChatInterface = () => {
             {formData.tema.length}/100
           </div>
         </div>
+
+        {selectedFormats.includes('Nota de prensa') && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Cantidad de palabras (Nota de prensa)
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => { setWordCountMode('short'); setWordCount(400); }}
+                className={`px-3 py-2 rounded-lg border ${wordCountMode === 'short' ? 'bg-udlp-yellow text-udlp-dark border-udlp-yellow' : 'bg-white text-gray-700 border-gray-300'} `}
+              >
+                Texto corto (400)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setWordCountMode('medium'); setWordCount(800); }}
+                className={`px-3 py-2 rounded-lg border ${wordCountMode === 'medium' ? 'bg-udlp-yellow text-udlp-dark border-udlp-yellow' : 'bg-white text-gray-700 border-gray-300'} `}
+              >
+                Texto medio (800)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setWordCountMode('long'); setWordCount(1200); }}
+                className={`px-3 py-2 rounded-lg border ${wordCountMode === 'long' ? 'bg-udlp-yellow text-udlp-dark border-udlp-yellow' : 'bg-white text-gray-700 border-gray-300'} `}
+              >
+                Texto largo (1.200)
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setWordCountMode('custom'); setWordCount(customWordCount); }}
+                  className={`px-3 py-2 rounded-lg border flex-shrink-0 ${wordCountMode === 'custom' ? 'bg-udlp-yellow text-udlp-dark border-udlp-yellow' : 'bg-white text-gray-700 border-gray-300'} `}
+                >
+                  Personalizado
+                </button>
+                <input
+                  type="number"
+                  min={100}
+                  max={3000}
+                  step={50}
+                  value={customWordCount}
+                  onChange={(e) => {
+                    const val = Math.max(100, Math.min(3000, parseInt(e.target.value || '0', 10)));
+                    setCustomWordCount(val);
+                    if (wordCountMode === 'custom') setWordCount(val);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
+                  placeholder="Hasta 3.000"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -454,7 +612,7 @@ const UDLPChatInterface = () => {
 
         <div>
           <button
-            onClick={() => handleContentSubmit(formData)}
+            onClick={() => handleContentSubmit({ ...formData, wordCount: selectedFormats.includes('Nota de prensa') ? wordCount : undefined })}
             disabled={!isValid || isGenerating}
             className="w-full bg-udlp-yellow text-udlp-dark py-2 px-4 rounded-lg hover:bg-yellow-400 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
@@ -675,7 +833,12 @@ const UDLPChatInterface = () => {
                           ✅ Aprobar y usar
                         </button>
                         <button
-                          onClick={() => handleAction('edit')}
+                          onClick={() => {
+                            // activar modo conversacional de refinado
+                            setRefinePrompt('');
+                            addMessage({ type: 'user', content: '✏️ Editar contenido (modo conversacional activado)' });
+                            addMessage({ type: 'bot', content: 'Indícame cómo quieres editar o mejorar el contenido. Por ejemplo: "reduce tono formal" o "agrega un párrafo sobre impacto social".' });
+                          }}
                           className="p-3 bg-udlp-blue hover:bg-blue-700 rounded-lg text-sm font-medium text-white border border-udlp-blue"
                         >
                           ✏️ Editar contenido
@@ -692,6 +855,25 @@ const UDLPChatInterface = () => {
                         >
                           🆕 Crear otro contenido
                         </button>
+                        {/* Conversational refine UI */}
+                        <div className="sm:col-span-4">
+                          <div className="mt-2 flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              value={refinePrompt}
+                              onChange={(e) => setRefinePrompt(e.target.value)}
+                              placeholder="Escribe aquí tu instrucción para refinar..."
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
+                            />
+                            <button
+                              onClick={handleRefineSubmit}
+                              disabled={isGenerating || refinePrompt.trim() === ''}
+                              className="px-4 py-2 bg-udlp-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              ↻ Regenerar
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </>
