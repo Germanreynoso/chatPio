@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { API_CONFIG } from './config/api';
 import ImageGenerationModal from './components/image-generator/ImageGenerationModal';
+import AudioPodcastModal from './components/audio/AudioPodcastModal';
+import VideoAvatarModal from './components/video/VideoAvatarModal';
+import VideoGenerationModal from './components/video/VideoGenerationModal';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
 // Si estás usando una librería de Supabase en tu entorno, esta línea debería funcionar.
@@ -72,6 +75,9 @@ const UDLPChatInterface = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
   const [imagePromptData, setImagePromptData] = useState<any | null>(null);
+  const [showAudioModal, setShowAudioModal] = useState<boolean>(false);
+  const [showVideoAvatarModal, setShowVideoAvatarModal] = useState<boolean>(false);
+  const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
   const [lastFormData, setLastFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number} | null>(null);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
   
@@ -172,9 +178,21 @@ const UDLPChatInterface = () => {
     const summary = `Área: ${selectedArea}\nFormatos: ${selectedFormats.join(', ')}\nIdiomas: ${selectedLanguages.join(', ')}`;
     addMessage({ type: 'user', content: summary });
 
-    // Si el usuario selecciona Imagen como formato, abrir el generador de imágenes
+    // Si el usuario selecciona Imagen / Audio/podcast / Video con avatar, abrir su modal correspondiente
     if (selectedFormats.includes('Imagen')) {
       setShowImageModal(true);
+      return;
+    }
+    if (selectedFormats.includes('Audio/podcast')) {
+      setShowAudioModal(true);
+      return;
+    }
+    if (selectedFormats.includes('Video con avatar')) {
+      setShowVideoAvatarModal(true);
+      return;
+    }
+    if (selectedFormats.includes('Video')) {
+      setShowVideoModal(true);
       return;
     }
 
@@ -918,6 +936,15 @@ const UDLPChatInterface = () => {
     </div>
     {showImageModal && (
       <ImageGenerationModal onClose={() => setShowImageModal(false)} initialData={imagePromptData || undefined} />
+    )}
+    {showAudioModal && (
+      <AudioPodcastModal onClose={() => setShowAudioModal(false)} />
+    )}
+    {showVideoAvatarModal && (
+      <VideoAvatarModal onClose={() => setShowVideoAvatarModal(false)} />
+    )}
+    {showVideoModal && (
+      <VideoGenerationModal onClose={() => setShowVideoModal(false)} />
     )}
     </>
   );
