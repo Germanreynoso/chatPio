@@ -206,6 +206,67 @@ const UDLPChatInterface = () => {
   };
 
 
+  // Función para manejar el envío del formulario de podcast
+  const handlePodcastSubmit = async (podcastData: any) => {
+    // Mostrar mensaje de carga
+    setIsGenerating(true);
+    addMessage({
+      type: 'bot',
+      content: '🎙️ Generando podcast...',
+      loading: true
+    });
+
+    try {
+      // Enviar datos al webhook para generar el podcast
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.CHAT), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'podcast',
+          data: podcastData,
+          area: selectedArea,
+          languages: selectedLanguages
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al generar el podcast');
+      }
+
+      const responseData = await response.json();
+      
+      // Actualizar la interfaz con la respuesta
+      setMessages(prev => prev.slice(0, -1));
+      addMessage({
+        type: 'bot',
+        content: responseData.data?.bot_response || '¡Tu podcast ha sido generado!',
+        generatedContent: [{
+          format: 'Audio/podcast',
+          title: 'Podcast generado',
+          content: responseData.data?.bot_response || 'Escucha el podcast generado'
+        }],
+        showActions: true
+      });
+      
+    } catch (error) {
+      console.error('Error al generar el podcast:', error);
+      setMessages(prev => {
+        const newMessages = [...prev];
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage.loading) {
+          lastMessage.content = '❌ Error al generar el podcast. Por favor, inténtalo de nuevo.';
+          lastMessage.loading = false;
+          lastMessage.error = true;
+        }
+        return newMessages;
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleContentSubmit = async (formData: {tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number;}) => {
     const summary = Object.entries(formData)
       .filter(([, value]) => {
@@ -938,7 +999,10 @@ const UDLPChatInterface = () => {
       <ImageGenerationModal onClose={() => setShowImageModal(false)} initialData={imagePromptData || undefined} />
     )}
     {showAudioModal && (
-      <AudioPodcastModal onClose={() => setShowAudioModal(false)} />
+      <AudioPodcastModal 
+        onClose={() => setShowAudioModal(false)}
+        onSubmit={handlePodcastSubmit}
+      />
     )}
     {showVideoAvatarModal && (
       <VideoAvatarModal onClose={() => setShowVideoAvatarModal(false)} />

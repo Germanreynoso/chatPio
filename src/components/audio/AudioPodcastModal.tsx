@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Mic, Users, MessageSquare, Volume2, Music, Clock, Settings, Sparkles, FileAudio, Lightbulb, DollarSign, User, Radio } from 'lucide-react';
 
-const AudioPodcastModal: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
+interface AudioPodcastModalProps {
+  onClose: () => void;
+  onSubmit?: (data: any) => void;
+}
+
+const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit }) => {
   const [format, setFormat] = useState('conversacion');
   const [participants, setParticipants] = useState([
     { id: 1, name: 'Enrique', voice: 'enrique_clone', role: 'Anfitrión', active: true },
@@ -135,10 +140,38 @@ const AudioPodcastModal: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
 
   const coste = calcularCoste();
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const podcastData = {
+      format,
+      participants: participants.filter(p => p.active),
+      topic,
+      style,
+      duration: parseInt(duration),
+      language,
+      backgroundMusic,
+      scriptStructure,
+      keyPoints,
+      tone,
+      targetAudience,
+      callToAction,
+      selectedModel,
+      quality,
+      includeIntro,
+      includeOutro
+    };
+
+    if (onSubmit) {
+      onSubmit(podcastData);
+    }
+    
+    if (onClose) onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative max-w-5xl w-full mx-4 bg-white rounded-2xl shadow-udlp-lg ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Mic className="text-orange-600" />
@@ -487,7 +520,10 @@ const AudioPodcastModal: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-            <button className="flex-1 bg-orange-600 text-white py-3 px-6 rounded-md hover:bg-orange-700 transition-colors font-medium flex items-center justify-center gap-2">
+            <button
+              type="submit"
+              className="flex-1 bg-orange-600 text-white py-3 px-6 rounded-md hover:bg-orange-700 transition-colors font-medium flex items-center justify-center gap-2"
+            >
               <Sparkles className="w-4 h-4" />
               Generar podcast
             </button>
@@ -511,7 +547,7 @@ const AudioPodcastModal: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
             </ul>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };
