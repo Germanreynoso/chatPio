@@ -746,7 +746,7 @@ const UDLPChatInterface = () => {
               {item.format}
             </span>
           </div>
-          <div className="whitespace-pre-line text-sm text-gray-700 bg-gray-50 p-3 rounded">
+          <div className={`whitespace-pre-line text-sm text-gray-700 bg-gray-50 p-3 rounded ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
             {item.content}
           </div>
         </div>
