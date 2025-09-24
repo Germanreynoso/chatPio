@@ -526,6 +526,79 @@ const UDLPChatInterface = () => {
 
   
 
+  const handleListenAudio = async (scriptText: string) => {
+    try {
+      // Mostrar indicador de carga
+      addMessage({
+        type: 'bot',
+        content: '🎵 Generando audio...',
+        loading: true
+      });
+
+      // Hacer llamada al webhook de audio
+      // Asumiendo que tienes un webhook configurado para generar audio con ElevenLabs
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.CHAT), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'audio-generate',
+          text: scriptText,
+          voice: 'RgXx32WYOGrd7gFNifSf', // ID de voz de ElevenLabs
+          model: 'elevenlabs'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al generar el audio');
+      }
+
+      // Obtener el audio como blob
+      const audioBlob = await response.blob();
+
+      // Crear URL del blob para reproducir
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Remover mensaje de carga
+      setMessages(prev => prev.slice(0, -1));
+
+      // Reproducir el audio
+      const audio = new Audio(audioUrl);
+      audio.play().catch(error => {
+        console.error('Error al reproducir el audio:', error);
+        addMessage({
+          type: 'bot',
+          content: '❌ Error al reproducir el audio.',
+          error: true
+        });
+      });
+
+      // Mostrar controles de audio
+      addMessage({
+        type: 'bot',
+        content: '🎧 Reproduciendo audio generado...',
+        generatedContent: [{
+          format: 'Audio',
+          title: 'Audio generado',
+          content: 'Audio generado con ElevenLabs',
+          audioUrl: audioUrl,
+          mimeType: 'audio/mpeg'
+        }],
+        showActions: false
+      });
+
+    } catch (error) {
+      console.error('Error al generar audio:', error);
+      setMessages(prev => prev.slice(0, -1));
+      addMessage({
+        type: 'bot',
+        content: '❌ Error al generar el audio. Por favor, inténtalo de nuevo.',
+        error: true
+      });
+    }
+  };
+
   const handleAction = (action: string) => {
     if (action === 'approve') {
       addMessage({ type: 'user', content: '✅ Aprobar y usar' });
@@ -1095,7 +1168,7 @@ const UDLPChatInterface = () => {
                     {message.showContentForm && <ContentForm />}
                     
                     {message.showActions && (
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-5 gap-2">
                         <button
                           onClick={() => handleAction('approve')}
                           className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-sm font-medium text-green-700 border border-green-200"
@@ -1113,6 +1186,23 @@ const UDLPChatInterface = () => {
                         >
                           ✏️ Editar contenido
                         </button>
+                        {message.generatedContent && message.generatedContent.some(item => item.format.toLowerCase().includes('audio') || item.format.toLowerCase().includes('podcast')) && (
+                          <button
+                            onClick={() => {
+                              // Obtener el texto del guion del contenido generado
+                              const scriptItem = message.generatedContent!.find(item =>
+                                item.format.toLowerCase().includes('audio') ||
+                                item.format.toLowerCase().includes('podcast')
+                              );
+                              if (scriptItem && scriptItem.content) {
+                                handleListenAudio(scriptItem.content);
+                              }
+                            }}
+                            className="p-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium text-white"
+                          >
+                            🎧 Escuchar
+                          </button>
+                        )}
                         <button
                           onClick={() => setShowImageModal(true)}
                           className="p-3 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
@@ -1126,7 +1216,7 @@ const UDLPChatInterface = () => {
                           🆕 Crear otro contenido
                         </button>
                         {/* Conversational refine UI */}
-                        <div className="sm:col-span-4">
+                        <div className="sm:col-span-5">
                           <div className="mt-2 flex flex-col sm:flex-row gap-2">
                             <input
                               type="text"
