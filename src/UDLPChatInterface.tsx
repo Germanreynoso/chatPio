@@ -297,7 +297,7 @@ const UDLPChatInterface = () => {
         // Mostrar el contenido generado igual que otras plataformas
         addMessage({
           type: 'bot',
-          content: 'He generado el guion para tu podcast:',
+          content: `He generado el guion para tu podcast:\n\n${responseData.data.bot_response || 'No se pudo generar el guion'}`,
           generatedContent: generatedContent,
           showActions: true
         });

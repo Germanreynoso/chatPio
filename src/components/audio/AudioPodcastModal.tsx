@@ -173,16 +173,9 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
     };
 
     try {
-      const script = await onSubmit(podcastData, {
-        preview: true,
-        onAudioReady: (audioData) => {
-          // This won't be called for script preview, but keeping for consistency
-        }
-      });
-
-      if (script) {
-        setGeneratedScript(script);
-      }
+      // Generate the complete podcast content (script + audio) and show in main chat
+      await onSubmit(podcastData);
+      onClose(); // Close the modal after generating
     } catch (error) {
       console.error('Error generating script preview:', error);
     } finally {
