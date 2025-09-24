@@ -3,7 +3,7 @@ import { Mic, Users, MessageSquare, Volume2, Music, Clock, Settings, Sparkles, F
 
 interface AudioPodcastModalProps {
   onClose: () => void;
-  onSubmit?: (data: any) => void;
+  onSubmit?: (data: any, options?: { preview: boolean, onAudioReady?: (audioData: any) => void }) => Promise<string | void>;
 }
 
 const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit }) => {
@@ -26,6 +26,11 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
   const [quality, setQuality] = useState('alta');
   const [includeIntro, setIncludeIntro] = useState(true);
   const [includeOutro, setIncludeOutro] = useState(true);
+  const [generatedScript, setGeneratedScript] = useState<string | null>(null);
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+  const [isEditingScript, setIsEditingScript] = useState(false);
+  const [editInstructions, setEditInstructions] = useState('');
+  const [isRefiningScript, setIsRefiningScript] = useState(false);
 
   const formatos = [
     { id: 'monologo', nombre: 'Monólogo', descripcion: 'Una sola voz narrando', participantes: 1 },
@@ -140,9 +145,100 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
 
   const coste = calcularCoste();
 
+  const handleScriptPreview = async () => {
+    if (!onSubmit) return;
+
+    setIsGeneratingScript(true);
+    setGeneratedScript(null);
+    setIsEditingScript(false);
+    setEditInstructions('');
+
+    const podcastData = {
+      format,
+      participants: participants.filter(p => p.active),
+      topic,
+      style,
+      duration: parseInt(duration),
+      language,
+      backgroundMusic,
+      scriptStructure,
+      keyPoints,
+      tone,
+      targetAudience,
+      callToAction,
+      selectedModel,
+      quality,
+      includeIntro,
+      includeOutro
+    };
+
+    try {
+      const script = await onSubmit(podcastData, {
+        preview: true,
+        onAudioReady: (audioData) => {
+          // This won't be called for script preview, but keeping for consistency
+        }
+      });
+
+      if (script) {
+        setGeneratedScript(script);
+      }
+    } catch (error) {
+      console.error('Error generating script preview:', error);
+    } finally {
+      setIsGeneratingScript(false);
+    }
+  };
+
+  const handleRefineScript = async () => {
+    if (!onSubmit || !editInstructions.trim()) return;
+
+    setIsRefiningScript(true);
+
+    const podcastData = {
+      format,
+      participants: participants.filter(p => p.active),
+      topic,
+      style,
+      duration: parseInt(duration),
+      language,
+      backgroundMusic,
+      scriptStructure,
+      keyPoints,
+      tone,
+      targetAudience,
+      callToAction,
+      selectedModel,
+      quality,
+      includeIntro,
+      includeOutro,
+      currentScript: generatedScript,
+      refineInstructions: editInstructions
+    };
+
+    try {
+      const refinedScript = await onSubmit(podcastData, {
+        preview: true,
+        onAudioReady: (audioData) => {
+          // This won't be called for script preview, but keeping for consistency
+        }
+      });
+
+      if (refinedScript) {
+        setGeneratedScript(refinedScript);
+        setIsEditingScript(false);
+        setEditInstructions('');
+      }
+    } catch (error) {
+      console.error('Error refining script:', error);
+    } finally {
+      setIsRefiningScript(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const podcastData = {
       format,
       participants: participants.filter(p => p.active),
@@ -165,7 +261,7 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
     if (onSubmit) {
       onSubmit(podcastData);
     }
-    
+
     if (onClose) onClose();
   };
 
@@ -496,6 +592,74 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
             </div>
           </div>
 
+          {generatedScript && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-blue-800 flex items-center">
+                  📝 Guion generado
+                </h4>
+                {!isEditingScript && (
+                  <button
+                    onClick={() => setIsEditingScript(true)}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    ✏️ Editar guion
+                  </button>
+                )}
+              </div>
+              <div className="text-sm text-blue-700 bg-white p-3 rounded border max-h-60 overflow-y-auto whitespace-pre-line">
+                {generatedScript}
+              </div>
+
+              {isEditingScript && (
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">
+                      Instrucciones para editar el guion
+                    </label>
+                    <textarea
+                      value={editInstructions}
+                      onChange={(e) => setEditInstructions(e.target.value)}
+                      placeholder="Ejemplo: Reduce el tono formal, agrega más humor, cambia el orden de los puntos..."
+                      className="w-full p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px]"
+                      maxLength={500}
+                    />
+                    <p className="text-xs text-blue-600 mt-1">
+                      {editInstructions.length}/500 caracteres
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleRefineScript}
+                      disabled={isRefiningScript || !editInstructions.trim()}
+                      className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    >
+                      {isRefiningScript ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Refinando...
+                        </>
+                      ) : (
+                        <>
+                          ↻ Regenerar guion
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingScript(false);
+                        setEditInstructions('');
+                      }}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h4 className="font-medium text-gray-800 mb-2 flex items-center">
               <FileAudio className="w-4 h-4 mr-1" />
@@ -527,8 +691,20 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
               <Sparkles className="w-4 h-4" />
               Generar podcast
             </button>
-            <button className="bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
-              Vista previa guión
+            <button
+              type="button"
+              onClick={handleScriptPreview}
+              disabled={isGeneratingScript}
+              className="bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {isGeneratingScript ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                'Vista previa guión'
+              )}
             </button>
             <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors">
               Cancelar

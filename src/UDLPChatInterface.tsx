@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2, Play, Pause } from 'lucide-react';
 import { API_CONFIG } from './config/api';
 import ImageGenerationModal from './components/image-generator/ImageGenerationModal';
 import AudioPodcastModal from './components/audio/AudioPodcastModal';
@@ -42,6 +42,9 @@ type GeneratedContentType = {
   format: string;
   title: string;
   content: string;
+  audioUrl?: string;
+  audioBase64?: string;
+  mimeType?: string;
 };
 
 type RecentContentType = {
@@ -207,14 +210,19 @@ const UDLPChatInterface = () => {
 
 
   // Función para manejar el envío del formulario de podcast
-  const handlePodcastSubmit = async (podcastData: any) => {
-    // Mostrar mensaje de carga
-    setIsGenerating(true);
-    addMessage({
-      type: 'bot',
-      content: '🎙️ Generando podcast...',
-      loading: true
-    });
+  const handlePodcastSubmit = async (podcastData: any, options?: { preview: boolean, onAudioReady?: (audioData: any) => void }): Promise<string | void> => {
+    const isPreview = options?.preview || false;
+    const onAudioReady = options?.onAudioReady;
+
+    // Mostrar mensaje de carga solo si no es una vista previa
+    if (!isPreview) {
+      setIsGenerating(true);
+      addMessage({
+        type: 'bot',
+        content: '🎙️ Generando podcast...',
+        loading: true
+      });
+    }
 
     try {
       // Enviar datos al webhook para generar el podcast
@@ -227,7 +235,10 @@ const UDLPChatInterface = () => {
           type: 'podcast',
           data: podcastData,
           area: selectedArea,
-          languages: selectedLanguages
+          languages: selectedLanguages,
+          isPreview: isPreview, // Indicamos al backend si es una vista previa
+          refineInstructions: podcastData.refineInstructions, // Instrucciones de refinado si existen
+          currentScript: podcastData.currentScript // Guion actual para refinar
         }),
       });
 
@@ -236,19 +247,70 @@ const UDLPChatInterface = () => {
       }
 
       const responseData = await response.json();
+
+      // Si es una vista previa, devolver el guion
+      if (isPreview) {
+        return responseData.data?.bot_response || 'No se pudo generar el guion';
+      }
+
+      // Si es una vista previa y hay un manejador de audio, lo llamamos
+      if (onAudioReady) {
+        onAudioReady({
+          audioUrl: responseData.data?.audioUrl,
+          audioBase64: responseData.data?.audioBase64,
+          mimeType: responseData.data?.mimeType || 'audio/mp3'
+        });
+        return;
+      }
       
-      // Actualizar la interfaz con la respuesta
-      setMessages(prev => prev.slice(0, -1));
-      addMessage({
-        type: 'bot',
-        content: responseData.data?.bot_response || '¡Tu podcast ha sido generado!',
-        generatedContent: [{
+      // Buscar el audio en múltiples ubicaciones posibles
+      const audioBase64 =
+        responseData.audio_base64 ||
+        responseData.data?.audio_base64 ||
+        responseData.audio ||
+        responseData.data?.audio ||
+        null;
+
+      const audioMimeType =
+        responseData.audio_mime_type ||
+        responseData.data?.audio_mime_type ||
+        responseData.mime_type ||
+        responseData.data?.mime_type ||
+        'audio/mpeg';
+
+      console.log('Audio encontrado:', audioBase64 ? 'Sí' : 'No', 'Tipo MIME:', audioMimeType);
+
+      // Si no es una vista previa, actualizamos la interfaz con la respuesta
+      if (!isPreview) {
+        setMessages(prev => prev.slice(0, -1));
+
+        // Formatear la respuesta para que coincida con lo que espera la interfaz
+        const generatedContent = [{
           format: 'Audio/podcast',
-          title: 'Podcast generado',
-          content: responseData.data?.bot_response || 'Escucha el podcast generado'
-        }],
-        showActions: true
-      });
+          title: 'Guion generado',
+          content: responseData.data.bot_response,
+          audioUrl: responseData.data?.audioUrl,
+          audioBase64: audioBase64,
+          mimeType: audioMimeType
+        }];
+
+        // Mostrar el contenido generado igual que otras plataformas
+        addMessage({
+          type: 'bot',
+          content: 'He generado el guion para tu podcast:',
+          generatedContent: generatedContent,
+          showActions: true
+        });
+
+        // Actualizar el historial
+        const newContent: RecentContentType = {
+          area: selectedArea,
+          format: 'Audio/podcast',
+          topic: podcastData.topic || 'Podcast generado',
+          time: 'ahora'
+        };
+        setRecentContents(prev => [newContent, ...prev.slice(0, 3)]);
+      }
       
     } catch (error) {
       console.error('Error al generar el podcast:', error);
@@ -736,23 +798,125 @@ const UDLPChatInterface = () => {
     );
   };
 
-  const GeneratedContent: React.FC<{content: GeneratedContentType[]}> = ({ content }) => (
-    <div className="mt-4 space-y-4">
-      {content.map((item, index) => (
-        <div key={index} className="border rounded-lg p-4 bg-white">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-blue-600">{item.title}</h4>
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-              {item.format}
-            </span>
+  const GeneratedContent: React.FC<{content: GeneratedContentType[]}> = ({ content }) => {
+    const [isPlaying, setIsPlaying] = useState<{[key: number]: boolean}>({});
+    const audioRefs = useRef<{[key: number]: HTMLAudioElement | null}>({});
+    
+    // Función para manejar la referencia del audio
+    const setAudioRef = (index: number) => (el: HTMLAudioElement | null) => {
+      if (el) {
+        audioRefs.current[index] = el;
+      }
+    };
+
+    const toggleAudio = (index: number) => {
+      const audio = audioRefs.current[index];
+      if (!audio) return;
+
+      if (isPlaying[index]) {
+        audio.pause();
+      } else {
+        // Pausar todos los demás audios
+        Object.entries(audioRefs.current).forEach(([i, a]) => {
+          if (a && parseInt(i) !== index) {
+            a.pause();
+            setIsPlaying(prev => ({...prev, [i]: false}));
+          }
+        });
+        audio.play().catch(error => {
+          console.error('Error al reproducir el audio:', error);
+        });
+      }
+      setIsPlaying(prev => ({...prev, [index]: !prev[index]}));
+    };
+
+    // Efecto para manejar eventos de finalización de audio
+    useEffect(() => {
+      const currentAudioRefs = audioRefs.current;
+      
+      const handleEnded = (index: number) => {
+        setIsPlaying(prev => ({...prev, [index]: false}));
+      };
+
+      // Agregar event listeners
+      Object.entries(currentAudioRefs).forEach(([index, audio]) => {
+        if (audio) {
+          audio.addEventListener('ended', () => handleEnded(parseInt(index)));
+        }
+      });
+
+      // Limpiar
+      return () => {
+        Object.entries(currentAudioRefs).forEach(([index, audio]) => {
+          if (audio) {
+            audio.removeEventListener('ended', () => handleEnded(parseInt(index)));
+          }
+        });
+      };
+    }, [content]);
+
+    return (
+      <div className="mt-4 space-y-4">
+        {content.map((item, index) => (
+          <div key={index} className="border rounded-lg p-4 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold text-blue-600">{item.title}</h4>
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                {item.format}
+              </span>
+            </div>
+            
+            {/* Reproductor de audio si hay una URL de audio */}
+            {'audioUrl' in item && item.audioUrl && (
+              <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggleAudio(index)}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                      isPlaying[index] 
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                        : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                    } transition-colors`}
+                  >
+                    {isPlaying[index] ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                  </button>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-700 truncate">
+                      {isPlaying[index] ? 'Reproduciendo...' : 'Audio disponible'}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                      <div 
+                        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: isPlaying[index] ? '100%' : '0%' }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <audio
+                    ref={setAudioRef(index)}
+                    src={item.audioUrl}
+                    className="hidden"
+                    onEnded={() => {
+                      setIsPlaying(prev => ({...prev, [index]: false}));
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className={`whitespace-pre-line text-sm text-gray-700 ${'audioUrl' in item && item.audioUrl ? 'mt-3' : ''} ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
+              {item.content}
+            </div>
           </div>
-          <div className={`whitespace-pre-line text-sm text-gray-700 bg-gray-50 p-3 rounded ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
-            {item.content}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
   return (
     <>
