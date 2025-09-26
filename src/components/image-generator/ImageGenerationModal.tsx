@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb } from 'lucide-react';
+import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb,  } from 'lucide-react';
 
 export interface ImageGenerationModalProps {
   onClose: () => void;
@@ -20,6 +20,7 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
   const [selectedPlatform, setSelectedPlatform] = useState('general');
   const [selectedModel, setSelectedModel] = useState('imagen4');
   const [quality, setQuality] = useState('alta');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   // Prefill fields when initialData is provided
   useEffect(() => {
@@ -86,6 +87,13 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
     if (typeof d.quality === 'string') setQuality(d.quality);
     if (typeof d.calidad === 'string') setQuality(d.calidad);
   }, [initialData]);
+  useEffect(() => {
+  fetch("https://n8n.icc-e.org/webhook/8585afbe-52ba-44e2-b000-6d4028b1b250") // ← URL de tu flujo en n8n
+    .then((res) => res.json())
+    .then((data) => setImageUrl(data.imageUrl))
+    .catch((err) => console.error("Error obteniendo la imagen:", err));
+}, []);
+
 
   const formatos = [
     { id: 'horizontal', nombre: 'Horizontal (16:9)', resolucion: '1920x1080', uso: 'YouTube, LinkedIn, web' },
@@ -387,9 +395,15 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
               <Sparkles className="w-4 h-4" />
               Generar imagen
             </button>
-            <button className="bg-udlp-blue text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
+            <button
+              onClick={() => imageUrl && window.open(imageUrl, "_blank")}
+              disabled={!imageUrl}
+              className="bg-udlp-blue text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              type="button"
+            >     
               Vista previa
             </button>
+
             <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors border border-gray-200">
               Cancelar
             </button>
