@@ -214,15 +214,13 @@ const UDLPChatInterface = () => {
     const isPreview = options?.preview || false;
     const onAudioReady = options?.onAudioReady;
 
-    // Mostrar mensaje de carga solo si no es una vista previa
-    if (!isPreview) {
-      setIsGenerating(true);
-      addMessage({
-        type: 'bot',
-        content: '🎙️ Generando podcast...',
-        loading: true
-      });
-    }
+    // Mostrar mensaje de carga
+    setIsGenerating(true);
+    addMessage({
+      type: 'bot',
+      content: isPreview ? '🎙️ Generando vista previa del guion...' : '🎙️ Generando podcast...',
+      loading: true
+    });
 
     try {
       // Enviar datos al webhook para generar el podcast
@@ -248,9 +246,39 @@ const UDLPChatInterface = () => {
 
       const responseData = await response.json();
 
-      // Si es una vista previa, devolver el guion
+      // Si es una vista previa, mostrar el guion en el chat
       if (isPreview) {
-        return responseData.data?.bot_response || 'No se pudo generar el guion';
+        setMessages(prev => prev.slice(0, -1)); // Eliminar el mensaje de carga
+        
+        // Obtener el guion de la respuesta, manejando diferentes formatos
+        let scriptContent = 'No se pudo generar el guion';
+        
+        if (typeof responseData === 'string') {
+          scriptContent = responseData;
+        } else if (typeof responseData.data?.bot_response === 'string') {
+          scriptContent = responseData.data.bot_response;
+        } else if (responseData.data) {
+          // Si es un objeto, convertirlo a string formateado
+          try {
+            scriptContent = JSON.stringify(responseData.data, null, 2);
+          } catch (e) {
+            scriptContent = 'Formato de respuesta no reconocido';
+          }
+        }
+        
+        // Mostrar el guion en el chat
+        addMessage({
+          type: 'bot',
+          content: 'Aquí tienes la vista previa del guion del podcast:',
+          generatedContent: [{
+            format: 'Guion de podcast',
+            title: 'Vista previa del guion',
+            content: scriptContent
+          }],
+          showActions: false
+        });
+        
+        return scriptContent;
       }
 
       // Si es una vista previa y hay un manejador de audio, lo llamamos

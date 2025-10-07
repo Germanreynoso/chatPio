@@ -148,11 +148,6 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
   const handleScriptPreview = async () => {
     if (!onSubmit) return;
 
-    setIsGeneratingScript(true);
-    setGeneratedScript(null);
-    setIsEditingScript(false);
-    setEditInstructions('');
-
     const podcastData = {
       format,
       participants: participants.filter(p => p.active),
@@ -173,13 +168,13 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
     };
 
     try {
-      // Generate the complete podcast content (script + audio) and show in main chat
-      await onSubmit(podcastData);
-      onClose(); // Close the modal after generating
+      // Llamar a onSubmit con los datos del podcast y la opción de vista previa
+      await onSubmit(podcastData, { preview: true });
+      
+      // Cerrar el modal después de generar la vista previa
+      onClose();
     } catch (error) {
       console.error('Error generating script preview:', error);
-    } finally {
-      setIsGeneratingScript(false);
     }
   };
 
