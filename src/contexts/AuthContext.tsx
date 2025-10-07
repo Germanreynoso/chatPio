@@ -5,8 +5,7 @@ import type { User, UserRole, AuthResponse } from '../types/auth';
 
 // Los tipos ahora se importan desde ../types/auth
 
-// Tiempo de expiración de la sesión en milisegundos (8 horas)
-const SESSION_EXPIRATION_TIME = 8 * 60 * 60 * 1000;
+// Sesión persistente sin expiración
 
 type StoredAuthData = {
   user: User;
@@ -44,19 +43,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       try {
         const authData: StoredAuthData = JSON.parse(storedAuth);
-        const currentTime = new Date().getTime();
-        
-        // Verificar si la sesión ha expirado
-        if (currentTime - authData.timestamp > SESSION_EXPIRATION_TIME) {
-          console.log('La sesión ha expirado');
-          localStorage.removeItem('auth');
-          return;
-        }
-
-        // Actualizar el timestamp de la sesión
-        authData.timestamp = currentTime;
-        localStorage.setItem('auth', JSON.stringify(authData));
-        
         setUser(authData.user);
       } catch (error) {
         console.error('Error al cargar datos de autenticación:', error);
