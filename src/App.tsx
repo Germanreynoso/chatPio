@@ -28,9 +28,6 @@ const Navbar = () => {
           </div>
           {user && (
             <div className="flex items-center">
-              <span className="text-sm text-gray-700 mr-4">
-                {user.name} ({user.areas[0]?.name || 'Sin área'})
-              </span>
               <button
                 onClick={logout}
                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -46,8 +43,19 @@ const Navbar = () => {
 };
 
 const AppContent = () => {
-  const { isAuthenticated } = useAuth();
-  
+  const { isAuthenticated, isAuthLoaded } = useAuth();
+
+  if (!isAuthLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {isAuthenticated && <Navbar />}
@@ -57,14 +65,14 @@ const AppContent = () => {
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            
+
             {/* Rutas protegidas */}
             <Route path="/chat" element={
               <ProtectedRoute>
                 <UDLPChatInterface />
               </ProtectedRoute>
             } />
-            
+
             {/* Ruta de redirección para rutas no encontradas */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

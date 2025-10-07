@@ -21,6 +21,7 @@ type AuthContextType = {
   logout: () => void;
   hasPermission: (requiredRole: UserRole) => boolean;
   getKnowledgeBaseConfig: () => { id: string; endpoint: string } | null;
+  isAuthLoaded: boolean;
 };
 
 // Crear el contexto
@@ -33,6 +34,7 @@ type AuthProviderProps = {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isAuthLoaded, setIsAuthLoaded] = useState<boolean>(false);
   const isAuthenticated = !!user;
 
   // Cargar datos de autenticación guardados al iniciar la aplicación
@@ -51,6 +53,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     loadAuthData();
+    setIsAuthLoaded(true);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -153,7 +156,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [user]);
 
   return (
-    <AuthContext.Provider 
+    <AuthContext.Provider
       value={{
         user,
         isAuthenticated,
@@ -161,7 +164,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         login,
         logout,
         hasPermission,
-        getKnowledgeBaseConfig
+        getKnowledgeBaseConfig,
+        isAuthLoaded
       }}
     >
       {children}
