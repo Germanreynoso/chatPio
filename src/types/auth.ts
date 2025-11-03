@@ -22,6 +22,7 @@ export interface AuthResponse {
     id: string;
     email: string;
     area: string;
+    role?: string;
   };
   token?: string;
 }

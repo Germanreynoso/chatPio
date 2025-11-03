@@ -1013,6 +1013,23 @@ const UDLPChatInterface = () => {
             <div className={`whitespace-pre-line text-sm text-gray-700 ${'audioUrl' in item && item.audioUrl ? 'mt-3' : ''} ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
               {item.content}
             </div>
+
+            {/* Texto con enlace clickeable para acceder al audio si existe */}
+            {'enlaceVistaWeb' in item && item.enlaceVistaWeb && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  Para escuchar el audio{' '}
+                  <a
+                    href={item.enlaceVistaWeb as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  >
+                    haz clic aquí
+                  </a>
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </div>

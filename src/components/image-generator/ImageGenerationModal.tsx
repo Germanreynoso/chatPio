@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb,  } from 'lucide-react';
+import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb, X } from 'lucide-react';
+import imagePreview from '../../assets/image2.jpg';
+import { API_CONFIG } from '../../config/api';
 
 export interface ImageGenerationModalProps {
   onClose: () => void;
@@ -21,6 +23,10 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
   const [selectedModel, setSelectedModel] = useState('imagen4');
   const [quality, setQuality] = useState('alta');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedMessage, setGeneratedMessage] = useState<string>('');
 
   // Prefill fields when initialData is provided
   useEffect(() => {
@@ -136,6 +142,76 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
     if (sensoryElements.trim()) sections.push(`Elementos Sensoriales: ${sensoryElements}`);
     if (includeText && textContent.trim()) sections.push(`Texto a incluir: "${textContent}" (posición: ${textPosition})`);
     return sections.join('. ') || 'Complete los campos para generar el prompt...';
+  };
+
+  const handleGenerateImage = async () => {
+    const formData = {
+      characters,
+      world,
+      action,
+      visualStyle,
+      sensoryElements,
+      includeText,
+      textContent,
+      textPosition,
+      selectedFormat,
+      selectedResolution,
+      selectedPlatform,
+      selectedModel,
+      quality,
+      promptCompleto: generarPromptCompleto()
+    };
+
+    console.log('Enviando datos al webhook:', formData);
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.IMAGE_GENERATION), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook:', response.status, response.statusText);
+
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          console.log('Imagen generada exitosamente:', result);
+
+          // Extraer el mensaje del bot_response
+          const message = result.data?.bot_response;
+          if (message) {
+            setGeneratedMessage(message);
+            setShowPreview(true);
+          } else {
+            alert('Imagen generada, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+          }
+        } catch (jsonError) {
+          console.error('Error al parsear JSON:', jsonError);
+          // Si no es JSON válido, intentar obtener como texto plano
+          const textResponse = await response.text();
+          console.log('Respuesta como texto:', textResponse);
+          if (textResponse) {
+            setGeneratedMessage(textResponse);
+            setShowPreview(true);
+          } else {
+            alert('Imagen generada, pero la respuesta no es válida. Revisa la consola para más detalles.');
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error al generar la imagen:', response.statusText, errorText);
+        alert(`Error al generar la imagen: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -391,18 +467,79 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-            <button className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Generar imagen
+            <button
+              onClick={handleGenerateImage}
+              disabled={isGenerating}
+              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Generar imagen
+                </>
+              )}
             </button>
             <button
-              onClick={() => imageUrl && window.open(imageUrl, "_blank")}
-              disabled={!imageUrl}
-              className="bg-udlp-blue text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={() => setShowPreview(true)}
+              disabled={!generatedMessage}
+              className="bg-udlp-blue text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
               type="button"
-            >     
-              Vista previa
+            >
+              <Eye className="w-4 h-4" />
+              {generatedMessage ? 'Ver resultado' : 'Vista previa'}
             </button>
+            
+            {showPreview && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                <div className="relative bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+                  <div className="flex justify-between items-center p-4 border-b">
+                    <h3 className="text-lg font-semibold">Imagen generada</h3>
+                    <button
+                      onClick={() => setShowPreview(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <div className="p-4 flex justify-center">
+                    {generatedMessage ? (
+                      <div className="text-center max-w-2xl">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="font-medium text-green-800">Imagen generada exitosamente</span>
+                          </div>
+                          <div className="text-left">
+                            <p className="text-green-700 whitespace-pre-line">
+                              {generatedMessage}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={imagePreview}
+                        alt="Vista previa"
+                        className="max-w-full h-auto max-h-[70vh] object-contain"
+                      />
+                    )}
+                  </div>
+                  <div className="p-4 border-t flex justify-end">
+                    <button
+                      onClick={() => setShowPreview(false)}
+                      className="bg-udlp-blue text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors border border-gray-200">
               Cancelar

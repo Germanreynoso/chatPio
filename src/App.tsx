@@ -5,12 +5,24 @@ import ProtectedRoute from './components/ProtectedRoute';
 import UDLPChatInterface from './UDLPChatInterface';
 import Login from './pages/Login';
 import Unauthorized from './pages/Unauthorized';
+import UserDashboard from './pages/UserDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
-// Componente de ruta raíz que redirige según la autenticación
+// Componente de ruta raíz que redirige según la autenticación y rol
 const RootRedirect = () => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/chat" replace /> : <Navigate to="/login" replace />;
+  const { isAuthenticated, user, hasPermission } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirigir según el rol del usuario
+  if (hasPermission('admin')) {
+    return <Navigate to="/admin/dashboard" replace />;
+  } else {
+    return <Navigate to="/user/dashboard" replace />;
+  }
 };
 
 // Componente de navegación de ejemplo
@@ -28,9 +40,6 @@ const Navbar = () => {
           </div>
           {user && (
             <div className="flex items-center">
-              <span className="text-sm text-gray-700 mr-4">
-                {user.name} ({user.areas[0]?.name || 'Sin área'})
-              </span>
               <button
                 onClick={logout}
                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -64,7 +73,20 @@ const AppContent = () => {
                 <UDLPChatInterface />
               </ProtectedRoute>
             } />
-            
+
+            {/* Rutas de dashboard por rol */}
+            <Route path="/user/dashboard" element={
+              <ProtectedRoute requiredRole="user">
+                <UserDashboard />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+
             {/* Ruta de redirección para rutas no encontradas */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
