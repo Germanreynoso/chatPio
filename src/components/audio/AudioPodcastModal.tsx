@@ -9,8 +9,7 @@ interface AudioPodcastModalProps {
 const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit }) => {
   const [format, setFormat] = useState('conversacion');
   const [participants, setParticipants] = useState([
-    { id: 1, name: 'Enrique', voice: 'enrique_clone', role: 'Anfitrión', active: true },
-    { id: 2, name: 'Andrea', voice: 'andrea_clone', role: 'Co-anfitriona', active: false }
+    { id: 1, name: 'Equipo Union Deportiva las Palmas', voice: 'enrique_clone', role: 'Narrador', active: true }
   ]);
   const [topic, setTopic] = useState('');
   const [style, setStyle] = useState('profesional');
@@ -34,9 +33,6 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
 
   const formatos = [
     { id: 'monologo', nombre: 'Monólogo', descripcion: 'Una sola voz narrando', participantes: 1 },
-    { id: 'conversacion', nombre: 'Conversación', descripcion: 'Diálogo entre dos personas', participantes: 2 },
-    { id: 'entrevista', nombre: 'Entrevista', descripcion: 'Formato pregunta-respuesta', participantes: 2 },
-    { id: 'mesa_redonda', nombre: 'Mesa redonda', descripcion: 'Múltiples participantes', participantes: 3 },
     { id: 'noticiario', nombre: 'Noticiario', descripcion: 'Formato informativo formal', participantes: 1 }
   ];
 
@@ -76,8 +72,7 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
   ];
 
   const vocesDisponibles = [
-    { id: 'enrique_clone', nombre: 'Enrique (Clonada)', tipo: 'Clonada', descripcion: 'Voz original de Enrique' },
-    { id: 'andrea_clone', nombre: 'Andrea (Clonada)', tipo: 'Clonada', descripcion: 'Voz original de Andrea' },
+    { id: 'enrique_clone', nombre: 'Equipo Union Deportiva las Palmas (Clonada)', tipo: 'Clonada', descripcion: 'Voz original del Equipo Union Deportiva las Palmas' },
     { id: 'presentador_m', nombre: 'Presentador Masculino', tipo: 'Sintética', descripcion: 'Voz profesional masculina' },
     { id: 'presentadora_f', nombre: 'Presentadora Femenina', tipo: 'Sintética', descripcion: 'Voz profesional femenina' },
     { id: 'locutor_radio', nombre: 'Locutor de Radio', tipo: 'Sintética', descripcion: 'Voz radiofónica clásica' },
@@ -271,7 +266,7 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
               <h3 className="font-medium text-orange-900">Generación de audio conversacional</h3>
             </div>
             <p className="text-sm text-orange-700">
-              Define el formato, participantes y estructura para crear contenido de audio profesional. Las voces clonadas de Enrique y Andrea están disponibles para uso inmediato.
+              Define el formato, participantes y estructura para crear contenido de audio profesional. Las voces clonadas del Equipo Union Deportiva las Palmas están disponibles para uso inmediato.
             </p>
           </div>
 
@@ -280,7 +275,7 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
               <Radio className="inline w-4 h-4 mr-1" />
               Formato del audio
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-md mx-auto">
               {formatos.map((formato) => (
                 <div
                   key={formato.id}
@@ -314,13 +309,13 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
                       : 'border-gray-200 bg-gray-50'
                   }`}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
-                    <div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                    <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={participant.active}
                         onChange={(e) => updateParticipant(participant.id, 'active', e.target.checked)}
-                        className="mr-2 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                       />
                       <input
                         type="text"
@@ -331,12 +326,12 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
                         disabled={!participant.active}
                       />
                     </div>
-                    <div>
+                    <div className="md:ml-20">
                       <input
                         type="text"
                         value={participant.role}
                         onChange={(e) => updateParticipant(participant.id, 'role', e.target.value)}
-                        placeholder="Rol (ej: Anfitrión)"
+                        placeholder="Rol (ej: Narrador)"
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         disabled={!participant.active}
                       />
@@ -356,7 +351,7 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
                       </select>
                     </div>
                     <div className="text-xs text-gray-500">
-                      {vocesDisponibles.find(v => v.id === participant.voice)?.descripcion}
+                      {participant.voice === 'enrique_clone' ? 'Voz clonada del equipo' : vocesDisponibles.find(v => v.id === participant.voice)?.descripcion}
                     </div>
                   </div>
                 </div>
@@ -688,10 +683,10 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
               {isGeneratingScript ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Generando...
+                  Generando... este proceso puede demorar unos segundos
                 </>
               ) : (
-                'Vista previa guión'
+                'Escucha el guion generado'
               )}
             </button>
             <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors">
@@ -702,7 +697,7 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <h4 className="font-medium text-orange-800 mb-2">🎙️ Tips para audio/podcast profesional</h4>
             <ul className="text-sm text-orange-700 space-y-1">
-              <li>• <strong>Voces clonadas:</strong> Enrique y Andrea tienen voces entrenadas disponibles</li>
+              <li>• <strong>Voces clonadas:</strong> El Equipo Union Deportiva las Palmas tiene voces entrenadas disponibles</li>
               <li>• <strong>Estructura clara:</strong> Define intro, desarrollo y conclusión para mejor flujo</li>
               <li>• <strong>Conversaciones naturales:</strong> Incluye pausas y transiciones orgánicas</li>
               <li>• <strong>Duración óptima:</strong> 5-15 minutos son ideales para retención de audiencia</li>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Video, Users, Globe2, Zap, Palette, Eye, Volume2, Clock, Settings, Sparkles, FileVideo, Lightbulb, DollarSign, Monitor, Layout } from 'lucide-react';
+import { API_CONFIG } from '../../config/api';
 
 type VideoGenerationModalProps = {
   onClose?: () => void;
@@ -20,6 +21,8 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) 
   const [frameRate, setFrameRate] = useState('24');
   const [cameraMovement, setCameraMovement] = useState('estatico');
   const [quality, setQuality] = useState('alta');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
 
   const formatos = [
     { id: 'horizontal', nombre: 'Horizontal (16:9)', resolucion: '1920x1080', uso: 'YouTube, web, presentaciones' },
@@ -100,6 +103,75 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) 
     }
     sections.push(`Duración: ${duration} segundos`);
     return sections.join('. ') || 'Complete los campos para generar el prompt...';
+  };
+
+  const handleGenerateVideo = async () => {
+    const formData = {
+      characters,
+      world,
+      action,
+      visualStyle,
+      sensoryElements,
+      audioDescription,
+      duration,
+      selectedFormat,
+      selectedResolution,
+      selectedPlatform,
+      selectedModel,
+      frameRate,
+      cameraMovement,
+      quality,
+      promptCompleto: generarPromptCompleto()
+    };
+
+    console.log('Enviando datos al webhook de video:', formData);
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.VIDEO_GENERATION), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook de video:', response.status, response.statusText);
+
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          console.log('Video generado exitosamente:', result);
+
+          // Extraer el mensaje del bot_response
+          const message = result.data?.bot_response;
+          if (message) {
+            setGeneratedMessage(message);
+          } else {
+            alert('Video generado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+          }
+        } catch (jsonError) {
+          console.error('Error al parsear JSON:', jsonError);
+          // Si no es JSON válido, intentar obtener como texto plano
+          const textResponse = await response.text();
+          console.log('Respuesta como texto:', textResponse);
+          if (textResponse) {
+            setGeneratedMessage(textResponse);
+          } else {
+            alert('Video generado, pero la respuesta no es válida. Revisa la consola para más detalles.');
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error al generar el video:', response.statusText, errorText);
+        alert(`Error al generar el video: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const coste = calcularCoste();
@@ -388,12 +460,22 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) 
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-            <button 
-              disabled={!modelos.find(m => m.id === selectedModel)?.disponible}
+            <button
+              onClick={handleGenerateVideo}
+              disabled={isGenerating || !modelos.find(m => m.id === selectedModel)?.disponible}
               className="flex-1 bg-purple-600 text-white py-3 px-6 rounded-md hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              <Sparkles className="w-4 h-4" />
-              Generar vídeo
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Generar vídeo
+                </>
+              )}
             </button>
             <button className="bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
               Vista previa
@@ -402,6 +484,18 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) 
               Cancelar
             </button>
           </div>
+
+          {generatedMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-800 mb-2 flex items-center">
+                <Sparkles className="w-4 h-4 mr-1" />
+                Video generado exitosamente
+              </h4>
+              <div className="text-sm text-green-700 bg-white p-3 rounded border max-h-40 overflow-y-auto">
+                {generatedMessage}
+              </div>
+            </div>
+          )}
 
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h4 className="font-medium text-purple-800 mb-2">🎬 Tips específicos para generación de vídeo</h4>

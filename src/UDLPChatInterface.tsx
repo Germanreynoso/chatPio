@@ -573,7 +573,7 @@ const UDLPChatInterface = () => {
         body: JSON.stringify({
           type: 'audio-generate',
           text: scriptText,
-          voice: 'RgXx32WYOGrd7gFNifSf', // ID de voz de ElevenLabs
+          voice: 'agent_4901k99vgjjhfehtnehyp5w4tdv8', // ID de voz de ElevenLabs
           model: 'elevenlabs'
         }),
       });

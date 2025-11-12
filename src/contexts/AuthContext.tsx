@@ -5,8 +5,6 @@ import type { User, UserRole, AuthResponse } from '../types/auth';
 
 // Los tipos ahora se importan desde ../types/auth
 
-// Tiempo de expiración de la sesión en milisegundos (8 horas)
-const SESSION_EXPIRATION_TIME = 8 * 60 * 60 * 1000;
 
 type StoredAuthData = {
   user: User;
@@ -32,40 +30,22 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const isAuthenticated = !!user;
-
-  // Cargar datos de autenticación guardados al iniciar la aplicación
-  useEffect(() => {
-    const loadAuthData = () => {
-      const storedAuth = localStorage.getItem('auth');
-      if (!storedAuth) return;
-
+  const [user, setUser] = useState<User | null>(() => {
+    const storedAuth = localStorage.getItem('auth');
+    if (storedAuth) {
       try {
         const authData: StoredAuthData = JSON.parse(storedAuth);
-        const currentTime = new Date().getTime();
-        
-        // Verificar si la sesión ha expirado
-        if (currentTime - authData.timestamp > SESSION_EXPIRATION_TIME) {
-          console.log('La sesión ha expirado');
-          localStorage.removeItem('auth');
-          return;
-        }
-
-        // Actualizar el timestamp de la sesión
-        authData.timestamp = currentTime;
-        localStorage.setItem('auth', JSON.stringify(authData));
-        
-        setUser(authData.user);
+        return authData.user;
       } catch (error) {
         console.error('Error al cargar datos de autenticación:', error);
         localStorage.removeItem('auth');
+        return null;
       }
-    };
-
-    loadAuthData();
-  }, []);
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isAuthenticated = !!user;
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
