@@ -4,6 +4,8 @@ export const ENV = {
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
   WEBHOOK_IMAGE_GENERATION: import.meta.env.VITE_WEBHOOK_IMAGE_GENERATION,
   WEBHOOK_VIDEO_GENERATION: import.meta.env.VITE_WEBHOOK_VIDEO_GENERATION,
+  WEBHOOK_AVATAR_VIDEO_GENERATION: import.meta.env.VITE_WEBHOOK_AVATAR_VIDEO_GENERATION,
+  WEBHOOK_SYNTHESIA_VIDEO_GENERATION: import.meta.env.VITE_WEBHOOK_SYNTHESIA_VIDEO_GENERATION,
   WEBHOOK_CHAT: import.meta.env.VITE_WEBHOOK_CHAT,
   DEV_PROXY_TARGET: import.meta.env.VITE_DEV_PROXY_TARGET,
   DEBUG: import.meta.env.VITE_DEBUG === 'true',
@@ -47,7 +49,13 @@ export const API_CONFIG = {
     IMAGE_GENERATION: ENV.WEBHOOK_IMAGE_GENERATION || '/webhook/607039ee-6cd4-4a8f-a344-b419521a2067',
 
     // Endpoint para generación de videos
-    VIDEO_GENERATION: ENV.WEBHOOK_VIDEO_GENERATION || '/webhook/7049ac67-d242-4c7d-86d0-6e8d0038b8dd',
+    VIDEO_GENERATION: ENV.WEBHOOK_VIDEO_GENERATION || '/webhook/44f0bb9d-0331-4f86-a741-617ea1121769',
+
+    // Endpoint para generación de videos con avatar
+    AVATAR_VIDEO_GENERATION: ENV.WEBHOOK_AVATAR_VIDEO_GENERATION || '/webhook/7049ac67-d242-4c7d-86d0-6e8d0038b8dd',
+
+    // Endpoint para generación de videos con Synthesia
+    SYNTHESIA_VIDEO_GENERATION: ENV.WEBHOOK_SYNTHESIA_VIDEO_GENERATION || '/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62',
   },
   
   // Tiempo máximo de espera para las peticiones (en ms)
@@ -63,7 +71,16 @@ export const API_CONFIG = {
       return endpoint;
     }
 
-    // Asegurarse de que no haya dobles barras en la URL
+    // Para desarrollo, usar el proxy de Vite
+    if (import.meta.env.MODE === 'development') {
+      const proxyUrl = `/api${endpoint}`;
+      if (ENV.DEBUG) {
+        console.log('Usando proxy en desarrollo:', proxyUrl);
+      }
+      return proxyUrl;
+    }
+
+    // Para producción, construir URL completa
     const baseUrl = API_BASE_URL.endsWith('/')
       ? API_BASE_URL.slice(0, -1)
       : API_BASE_URL;
@@ -75,7 +92,7 @@ export const API_CONFIG = {
     const fullUrl = `${baseUrl}${normalizedEndpoint}`;
 
     if (ENV.DEBUG) {
-      console.log('Construyendo URL completa:', { baseUrl, endpoint, normalizedEndpoint, fullUrl });
+      console.log('Construyendo URL completa para producción:', { baseUrl, endpoint, normalizedEndpoint, fullUrl });
     }
 
     return fullUrl;

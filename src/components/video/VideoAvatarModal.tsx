@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Camera, Settings, FileText, Globe, Monitor, ChevronDown } from 'lucide-react';
+import { API_CONFIG } from '../../config/api';
 
 type VideoAvatarModalProps = {
   onClose?: () => void;
@@ -16,6 +17,9 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [outputFormat, setOutputFormat] = useState('horizontal');
   const [resolution, setResolution] = useState('1080p');
   const [platform, setPlatform] = useState('youtube');
+  const [isGeneratingHeyGen, setIsGeneratingHeyGen] = useState(false);
+  const [isGeneratingSynthesia, setIsGeneratingSynthesia] = useState(false);
+  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
 
   const avatares = [
     { id: 'maria', nombre: 'María', descripcion: 'Presentadora profesional', imagen: '👩‍💼' },
@@ -48,6 +52,136 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       setResolution(plat.resolucion);
     } else {
       setPlatform(platformId);
+    }
+  };
+
+  const handleGenerateVideoWithHeyGen = async () => {
+    const formData = {
+      selectedAvatar,
+      selectedPlan,
+      selectedPosition,
+      selectedBackground,
+      script,
+      selectedLanguage,
+      selectedVoice,
+      outputFormat,
+      resolution,
+      platform,
+      videoType: 'avatar_heygen'
+    };
+
+    console.log('Enviando datos al webhook de video con HeyGen:', formData);
+    setIsGeneratingHeyGen(true);
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.AVATAR_VIDEO_GENERATION), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook de video con HeyGen:', response.status, response.statusText);
+
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          console.log('Video con avatar generado exitosamente:', result);
+
+          // Extraer el mensaje del bot_response
+          const message = result.data?.bot_response;
+          if (message) {
+            setGeneratedMessage(message);
+          } else {
+            alert('Video con avatar generado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+          }
+        } catch (jsonError) {
+          console.error('Error al parsear JSON:', jsonError);
+          // Si no es JSON válido, intentar obtener como texto plano
+          const textResponse = await response.text();
+          console.log('Respuesta como texto:', textResponse);
+          if (textResponse) {
+            setGeneratedMessage(textResponse);
+          } else {
+            alert('Video con avatar generado, pero la respuesta no es válida. Revisa la consola para más detalles.');
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error al generar el video con avatar:', response.statusText, errorText);
+        alert(`Error al generar el video con avatar: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsGeneratingHeyGen(false);
+    }
+  };
+
+  const handleGenerateVideoWithSynthesia = async () => {
+    const formData = {
+      selectedAvatar,
+      selectedPlan,
+      selectedPosition,
+      selectedBackground,
+      script,
+      selectedLanguage,
+      selectedVoice,
+      outputFormat,
+      resolution,
+      platform,
+      videoType: 'avatar_synthesia'
+    };
+
+    console.log('Enviando datos al webhook de video con Synthesia:', formData);
+    setIsGeneratingSynthesia(true);
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.SYNTHESIA_VIDEO_GENERATION), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook de video con Synthesia:', response.status, response.statusText);
+
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          console.log('Video con avatar generado exitosamente:', result);
+
+          // Extraer el mensaje del bot_response
+          const message = result.data?.bot_response;
+          if (message) {
+            setGeneratedMessage(message);
+          } else {
+            alert('Video con avatar generado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+          }
+        } catch (jsonError) {
+          console.error('Error al parsear JSON:', jsonError);
+          // Si no es JSON válido, intentar obtener como texto plano
+          const textResponse = await response.text();
+          console.log('Respuesta como texto:', textResponse);
+          if (textResponse) {
+            setGeneratedMessage(textResponse);
+          } else {
+            alert('Video con avatar generado, pero la respuesta no es válida. Revisa la consola para más detalles.');
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error al generar el video con avatar:', response.statusText, errorText);
+        alert(`Error al generar el video con avatar: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsGeneratingSynthesia(false);
     }
   };
 
@@ -244,16 +378,54 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-            <button className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium">
-              🎬 Generar vídeo con HeyGen
+            <button
+              onClick={handleGenerateVideoWithHeyGen}
+              disabled={isGeneratingHeyGen}
+              className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isGeneratingHeyGen ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Generando...
+                </>
+              ) : (
+                <>
+                  🎬 Generar vídeo con HeyGen
+                </>
+              )}
             </button>
-            <button className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium">
-              🎥 Generar vídeo con Synthesia
+            <button
+              onClick={handleGenerateVideoWithSynthesia}
+              disabled={isGeneratingSynthesia}
+              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isGeneratingSynthesia ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Generando...
+                </>
+              ) : (
+                <>
+                  🎥 Generar vídeo con Synthesia
+                </>
+              )}
             </button>
             <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors">
               Cancelar
             </button>
           </div>
+
+          {generatedMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-800 mb-2 flex items-center">
+                <Play className="w-4 h-4 mr-1" />
+                Video con avatar generado exitosamente
+              </h4>
+              <div className="text-sm text-green-700 bg-white p-3 rounded border max-h-40 overflow-y-auto">
+                {generatedMessage}
+              </div>
+            </div>
+          )}
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-700">
