@@ -79,9 +79,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
           const errorText = await response.text();
           console.log('Error response text:', errorText);
-          const errorData = JSON.parse(errorText);
-          if (errorData.message) {
-            errorMessage = errorData.message;
+          if (errorText.trim()) {
+            const errorData = JSON.parse(errorText);
+            if (errorData.message) {
+              errorMessage = errorData.message;
+            }
           }
         } catch (jsonError) {
           // Si no hay JSON en el error, usar el mensaje por defecto
