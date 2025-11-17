@@ -20,6 +20,9 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [isGeneratingHeyGen, setIsGeneratingHeyGen] = useState(false);
   const [isGeneratingSynthesia, setIsGeneratingSynthesia] = useState(false);
   const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
+  const [includeSubtitles, setIncludeSubtitles] = useState(false);
+  const [subtitleText, setSubtitleText] = useState('');
+  const [backgroundUrl, setBackgroundUrl] = useState('');
 
   const avatares = [
     { id: 'maria', nombre: 'María', descripcion: 'Presentadora profesional', imagen: '👩‍💼' },
@@ -57,11 +60,24 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
   const handleGenerateVideoWithHeyGen = async () => {
     const formData = {
-      selectedAvatar,
+      avatar_id: selectedAvatar,
+      background: backgroundUrl || selectedBackground,
+      background_url: backgroundUrl,
+      background_type: backgroundUrl ? 'url' : 'preset',
+      ratio: outputFormat === 'horizontal' ? '16:9' : outputFormat === 'vertical' ? '9:16' : '1:1',
+      video_size: resolution === '1080p' ? '1920x1080' : resolution === '720p' ? '1280x720' : '3840x2160',
+      script: {
+        type: 'text',
+        input_text: script,
+        language: selectedLanguage,
+        voice: selectedVoice
+      },
+      subtitles: includeSubtitles ? {
+        enabled: true,
+        text: subtitleText || script // Use custom subtitle text or fallback to script
+      } : { enabled: false },
       selectedPlan,
       selectedPosition,
-      selectedBackground,
-      script,
       selectedLanguage,
       selectedVoice,
       outputFormat,
@@ -252,7 +268,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Fondo</label>
-              <select 
+              <select
                 value={selectedBackground}
                 onChange={(e) => setSelectedBackground(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -264,6 +280,25 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              URL de fondo personalizado (opcional)
+            </label>
+            <input
+              type="url"
+              value={backgroundUrl}
+              onChange={(e) => setBackgroundUrl(e.target.value)}
+              placeholder="https://ejemplo.com/imagen-fondo.jpg"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Si proporcionas una URL de imagen, se usará como fondo en lugar del preset seleccionado arriba.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           </div>
 
           <div>
@@ -281,6 +316,38 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
             <div className="text-right text-xs text-gray-500 mt-1">
               {script.length}/3000 caracteres
             </div>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                id="includeSubtitles"
+                checked={includeSubtitles}
+                onChange={(e) => setIncludeSubtitles(e.target.checked)}
+                className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="includeSubtitles" className="text-sm font-medium text-gray-700">
+                Incluir subtítulos en el vídeo
+              </label>
+            </div>
+            {includeSubtitles && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Texto de subtítulos (opcional)
+                </label>
+                <textarea
+                  value={subtitleText}
+                  onChange={(e) => setSubtitleText(e.target.value)}
+                  placeholder="Si no especificas texto, se usarán los subtítulos generados automáticamente del script."
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px]"
+                  maxLength={3000}
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">
+                  {subtitleText.length}/3000 caracteres
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
