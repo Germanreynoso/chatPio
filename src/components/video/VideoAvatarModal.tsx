@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Camera, Settings, FileText, Globe, Monitor, ChevronDown } from 'lucide-react';
 import { API_CONFIG } from '../../config/api';
+
+const AVATAR_FEMALE_ID = "Hada_Casual_Cup_Front_public";
+const AVATAR_MALE_ID = "Armando_Casual_Front_public";
+const VOICE_FEMALE_ID = "3fac0e13ef4d42c0a30bc20e524ae43d";
+const VOICE_MALE_ID = "ec36396594a24ed182d6849ba0ea94b1";
 
 type VideoAvatarModalProps = {
   onClose?: () => void;
@@ -8,6 +13,8 @@ type VideoAvatarModalProps = {
 
 const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [selectedAvatar, setSelectedAvatar] = useState('');
+  const [avatarId, setAvatarId] = useState('');
+  const [voiceId, setVoiceId] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('medio');
   const [selectedPosition, setSelectedPosition] = useState('centro');
   const [selectedBackground, setSelectedBackground] = useState('oficina');
@@ -23,6 +30,19 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [includeSubtitles, setIncludeSubtitles] = useState(false);
   const [subtitleText, setSubtitleText] = useState('');
   const [backgroundUrl, setBackgroundUrl] = useState('');
+
+  useEffect(() => {
+    if (selectedAvatar === 'maria') {
+      setAvatarId(AVATAR_FEMALE_ID);
+      setVoiceId(VOICE_FEMALE_ID);
+    } else if (selectedAvatar === 'carlos') {
+      setAvatarId(AVATAR_MALE_ID);
+      setVoiceId(VOICE_MALE_ID);
+    } else {
+      setAvatarId(selectedAvatar);
+      setVoiceId(selectedVoice);
+    }
+  }, [selectedAvatar, selectedVoice]);
 
   const avatares = [
     { id: 'maria', nombre: 'María', descripcion: 'Presentadora profesional', imagen: '👩‍💼' },
@@ -60,7 +80,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
   const handleGenerateVideoWithHeyGen = async () => {
     const formData = {
-      avatar_id: selectedAvatar,
+      avatar_id: avatarId,
       background: backgroundUrl || selectedBackground,
       background_url: backgroundUrl,
       background_type: backgroundUrl ? 'url' : 'preset',
@@ -70,7 +90,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
         type: 'text',
         input_text: script,
         language: selectedLanguage,
-        voice: selectedVoice
+        voice: voiceId
       },
       subtitles: includeSubtitles ? {
         enabled: true,
@@ -138,13 +158,13 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
   const handleGenerateVideoWithSynthesia = async () => {
     const formData = {
-      selectedAvatar,
+      avatar_id: avatarId,
       selectedPlan,
       selectedPosition,
       selectedBackground,
       script,
       selectedLanguage,
-      selectedVoice,
+      voice: voiceId,
       outputFormat,
       resolution,
       platform,
