@@ -2,6 +2,7 @@
 export const ENV = {
   IS_DEVELOPMENT: import.meta.env.DEV,
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  WEBHOOK_LOGIN: import.meta.env.VITE_WEBHOOK_LOGIN,
   WEBHOOK_IMAGE_GENERATION: import.meta.env.VITE_WEBHOOK_IMAGE_GENERATION,
   WEBHOOK_VIDEO_GENERATION: import.meta.env.VITE_WEBHOOK_VIDEO_GENERATION,
   WEBHOOK_AVATAR_VIDEO_GENERATION: import.meta.env.VITE_WEBHOOK_AVATAR_VIDEO_GENERATION,
@@ -39,7 +40,7 @@ export const API_CONFIG = {
   // Endpoints de la API
   ENDPOINTS: {
     // Endpoint de autenticación
-    LOGIN: '/webhook/login',
+    LOGIN: ENV.WEBHOOK_LOGIN || '/webhook-test/login',
 
     // Endpoint para el chat - usa el mismo endpoint en ambos entornos
     // La diferencia está en la URL base (API_BASE_URL)

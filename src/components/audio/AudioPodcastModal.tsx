@@ -9,7 +9,7 @@ interface AudioPodcastModalProps {
 const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit }) => {
   const [format, setFormat] = useState('conversacion');
   const [participants, setParticipants] = useState([
-    { id: 1, name: 'Equipo Union Deportiva las Palmas', voice: 'enrique_clone', role: 'Narrador', active: true }
+    { id: 1, name: 'Pedro', voice: 'pedro', role: 'Narrador', active: true }
   ]);
   const [topic, setTopic] = useState('');
   const [style, setStyle] = useState('profesional');
@@ -72,11 +72,8 @@ const AudioPodcastModal: React.FC<AudioPodcastModalProps> = ({ onClose, onSubmit
   ];
 
   const vocesDisponibles = [
-    { id: 'enrique_clone', nombre: 'Equipo Union Deportiva las Palmas (Clonada)', tipo: 'Clonada', descripcion: 'Voz original del Equipo Union Deportiva las Palmas' },
-    { id: 'presentador_m', nombre: 'Presentador Masculino', tipo: 'Sintética', descripcion: 'Voz profesional masculina' },
-    { id: 'presentadora_f', nombre: 'Presentadora Femenina', tipo: 'Sintética', descripcion: 'Voz profesional femenina' },
-    { id: 'locutor_radio', nombre: 'Locutor de Radio', tipo: 'Sintética', descripcion: 'Voz radiofónica clásica' },
-    { id: 'joven_dinamica', nombre: 'Joven Dinámica', tipo: 'Sintética', descripcion: 'Voz juvenil y energética' }
+    { id: 'pedro', nombre: 'Pedro', tipo: 'Sintética', descripcion: 'Voz masculina' },
+    { id: 'maria', nombre: 'Maria', tipo: 'Sintética', descripcion: 'Voz femenina' }
   ];
 
   const handleFormatChange = (formatId: string) => {
