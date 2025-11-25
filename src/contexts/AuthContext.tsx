@@ -97,30 +97,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const responseText = await response.text();
         console.log('Success response text:', responseText);
 
-        // Si la respuesta está vacía, asumir que es exitosa pero sin datos
-        if (!responseText.trim()) {
-          console.log('Respuesta vacía del servidor, asumiendo login exitoso');
-          responseData = {
-            ok: true,
-            message: 'Login exitoso',
-            data: {
-              id: 'default-user',
-              email: email,
-              role: 'user',
-              area: 'default'
-            },
-            token: 'default-token'
-          };
-        } else {
-          responseData = JSON.parse(responseText);
-        }
+        responseData = JSON.parse(responseText);
       } catch (jsonError) {
         console.error('Error parsing JSON:', jsonError);
         throw new Error('La respuesta del servidor no es un JSON válido');
       }
 
-      if (!responseData.ok) {
-        throw new Error(responseData.message || 'Error en la autenticación');
+      if (!responseData.ok || !responseData.data) {
+        throw new Error(responseData.message || 'Error en la autenticación o datos faltantes');
       }
 
       // Mapear la respuesta del servidor al formato de usuario
