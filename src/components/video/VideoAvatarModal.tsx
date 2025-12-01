@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Camera, Settings, FileText, Globe, Monitor, ChevronDown } from 'lucide-react';
+import { Play, Camera, Settings, FileText, Globe, Monitor, ChevronDown, Check, RefreshCw } from 'lucide-react';
 import { API_CONFIG } from '../../config/api';
 
 const AVATAR_FEMALE_ID = "Hada_Casual_Cup_Front_public";
 const AVATAR_MALE_ID = "Armando_Casual_Front_public";
 const VOICE_FEMALE_ID = "3fac0e13ef4d42c0a30bc20e524ae43d";
 const VOICE_MALE_ID = "ec36396594a24ed182d6849ba0ea94b1";
+
+// Webhooks for Synthesia flow
+const WEBHOOK_ACCEPT_VIDEO = '/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62';
+const WEBHOOK_REGENERATE_SCRIPT = '/webhook/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
+
+// Type for the preview data from n8n
+type SynthesiaPreviewData = {
+  ok: boolean;
+  data: {
+    title: string;
+    description: string;
+    script: string;
+  };
+};
 
 type VideoAvatarModalProps = {
   onClose?: () => void;
@@ -30,6 +44,11 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [includeSubtitles, setIncludeSubtitles] = useState(false);
   const [subtitleText, setSubtitleText] = useState('');
   const [backgroundUrl, setBackgroundUrl] = useState('');
+  
+  // New state for Synthesia preview
+  const [synthesiaPreview, setSynthesiaPreview] = useState<SynthesiaPreviewData | null>(null);
+  const [isAcceptingVideo, setIsAcceptingVideo] = useState(false);
+  const [isRegeneratingScript, setIsRegeneratingScript] = useState(false);
 
   useEffect(() => {
     if (selectedAvatar === 'maria') {
@@ -173,6 +192,8 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
     console.log('Enviando datos al webhook de video con Synthesia:', formData);
     setIsGeneratingSynthesia(true);
+    setSynthesiaPreview(null); // Reset preview
+    setGeneratedMessage(null); // Reset message
 
     try {
       const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.SYNTHESIA_VIDEO_GENERATION), {
@@ -185,39 +206,154 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
       console.log('Respuesta del webhook de video con Synthesia:', response.status, response.statusText);
 
-      if (response.ok) {
-        try {
-          const result = await response.json();
-          console.log('Video con avatar generado exitosamente:', result);
+      // Read the response body only once
+      const responseText = await response.text();
+      console.log('Respuesta raw de Synthesia:', responseText);
 
-          // Extraer el mensaje del bot_response
-          const message = result.data?.bot_response;
-          if (message) {
-            setGeneratedMessage(message);
+      if (response.ok) {
+        // Check if response is empty
+        if (!responseText || responseText.trim() === '') {
+          console.log('Respuesta vacía del servidor');
+          setGeneratedMessage('Solicitud enviada correctamente. El servidor está procesando tu petición.');
+          return;
+        }
+        
+        try {
+          const result = JSON.parse(responseText);
+          console.log('JSON parseado de Synthesia:', result);
+
+          // Check if the response has the expected structure with title, description, script
+          if (result.ok && result.data && result.data.title && result.data.description && result.data.script) {
+            // Show preview instead of generating video directly
+            setSynthesiaPreview(result);
+            console.log('Vista previa de Synthesia configurada:', result);
+          } else if (result.data?.bot_response) {
+            // Fallback to old behavior if response has bot_response
+            setGeneratedMessage(result.data.bot_response);
+          } else if (result.message) {
+            // Handle simple message response
+            setGeneratedMessage(result.message);
           } else {
-            alert('Video con avatar generado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+            // Try to show whatever we got as preview if it has some structure
+            console.log('Estructura de respuesta no reconocida:', result);
+            if (typeof result === 'object' && result !== null) {
+              setSynthesiaPreview(result);
+            } else {
+              setGeneratedMessage(JSON.stringify(result));
+            }
           }
         } catch (jsonError) {
           console.error('Error al parsear JSON:', jsonError);
-          // Si no es JSON válido, intentar obtener como texto plano
-          const textResponse = await response.text();
-          console.log('Respuesta como texto:', textResponse);
-          if (textResponse) {
-            setGeneratedMessage(textResponse);
-          } else {
-            alert('Video con avatar generado, pero la respuesta no es válida. Revisa la consola para más detalles.');
-          }
+          // If not valid JSON, show as message
+          setGeneratedMessage(responseText);
         }
       } else {
-        const errorText = await response.text();
-        console.error('Error al generar el video con avatar:', response.statusText, errorText);
-        alert(`Error al generar el video con avatar: ${response.statusText}`);
+        console.error('Error al generar el video con avatar:', response.statusText, responseText);
+        alert(`Error al generar el video con avatar: ${response.statusText}\n${responseText}`);
       }
     } catch (error) {
       console.error('Error en la solicitud:', error);
       alert(`Error en la solicitud: ${error}`);
     } finally {
       setIsGeneratingSynthesia(false);
+    }
+  };
+
+  // Handler for "Aceptar y generar video" button
+  const handleAcceptAndGenerateVideo = async () => {
+    if (!synthesiaPreview) return;
+
+    console.log('Aceptando y generando video con datos:', synthesiaPreview);
+    setIsAcceptingVideo(true);
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(WEBHOOK_ACCEPT_VIDEO), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(synthesiaPreview),
+      });
+
+      console.log('Respuesta del webhook de aceptar video:', response.status, response.statusText);
+
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('Respuesta de aceptar video:', responseText);
+        
+        try {
+          const result = JSON.parse(responseText);
+          const message = result.data?.bot_response || result.message || 'Video aceptado y en proceso de generación';
+          setGeneratedMessage(message);
+        } catch {
+          setGeneratedMessage(responseText || 'Video aceptado y en proceso de generación');
+        }
+        
+        // Clear the preview after successful acceptance
+        setSynthesiaPreview(null);
+      } else {
+        const errorText = await response.text();
+        console.error('Error al aceptar el video:', response.statusText, errorText);
+        alert(`Error al aceptar el video: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de aceptar video:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsAcceptingVideo(false);
+    }
+  };
+
+  // Handler for "Regenerar guion" button
+  const handleRegenerateScript = async () => {
+    if (!synthesiaPreview) return;
+
+    console.log('Regenerando guion con datos:', synthesiaPreview);
+    setIsRegeneratingScript(true);
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(WEBHOOK_REGENERATE_SCRIPT), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(synthesiaPreview),
+      });
+
+      console.log('Respuesta del webhook de regenerar guion:', response.status, response.statusText);
+
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('Respuesta de regenerar guion:', responseText);
+        
+        try {
+          const result = JSON.parse(responseText);
+          console.log('JSON parseado de regenerar guion:', result);
+
+          // Check if the response has the expected structure
+          if (result.ok && result.data && result.data.title && result.data.description && result.data.script) {
+            // Update preview with new data
+            setSynthesiaPreview(result);
+            console.log('Vista previa actualizada con nuevo guion:', result);
+          } else if (result.data?.bot_response) {
+            setGeneratedMessage(result.data.bot_response);
+          } else {
+            // Try to show whatever we got as new preview
+            setSynthesiaPreview(result);
+          }
+        } catch {
+          setGeneratedMessage(responseText || 'Guion regenerado');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error al regenerar el guion:', response.statusText, errorText);
+        alert(`Error al regenerar el guion: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de regenerar guion:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsRegeneratingScript(false);
     }
   };
 
@@ -501,6 +637,80 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
               Cancelar
             </button>
           </div>
+
+          {/* Synthesia Preview Section */}
+          {synthesiaPreview && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h4 className="font-medium text-purple-800 mb-3 flex items-center">
+                <FileText className="w-4 h-4 mr-2" />
+                Vista previa del contenido generado
+              </h4>
+              
+              <div className="space-y-4 bg-white p-4 rounded-lg border border-purple-100">
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Título:</label>
+                  <div className="text-gray-900 bg-gray-50 p-2 rounded border">
+                    {synthesiaPreview.data?.title || 'Sin título'}
+                  </div>
+                </div>
+                
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción:</label>
+                  <div className="text-gray-900 bg-gray-50 p-2 rounded border">
+                    {synthesiaPreview.data?.description || 'Sin descripción'}
+                  </div>
+                </div>
+                
+                {/* Script */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Guion:</label>
+                  <div className="text-gray-900 bg-gray-50 p-3 rounded border max-h-48 overflow-y-auto whitespace-pre-wrap">
+                    {synthesiaPreview.data?.script || 'Sin guion'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <button
+                  onClick={handleAcceptAndGenerateVideo}
+                  disabled={isAcceptingVideo}
+                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {isAcceptingVideo ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Aceptar y generar video
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleRegenerateScript}
+                  disabled={isRegeneratingScript}
+                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {isRegeneratingScript ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Regenerando...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      Regenerar guion
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {generatedMessage && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
