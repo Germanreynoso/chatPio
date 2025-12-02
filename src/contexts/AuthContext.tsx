@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { API_CONFIG } from '../config/api';
+import { API_CONFIG, ENV } from '../config/api';
 import type { User, UserRole, AuthResponse } from '../types/auth';
 
 // Los tipos ahora se importan desde ../types/auth
@@ -53,16 +53,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
+      const url = ENV.IS_DEVELOPMENT ? 'https://n8n.icc-e.org/webhook/login' : `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`;
+      console.log('Login URL:', url);
+      const response = await fetch(url, {
         method: 'POST',
         ...API_CONFIG.CORS_CONFIG,
         headers: {
           ...API_CONFIG.CORS_CONFIG.headers,
           'Origin': window.location.origin,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: 'login',  // Identificador de acción para el webhook
-          email, 
+          email,
           password,
           timestamp: new Date().toISOString()
         }),

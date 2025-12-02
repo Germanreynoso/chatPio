@@ -40,7 +40,7 @@ export const API_CONFIG = {
   // Endpoints de la API
   ENDPOINTS: {
     // Endpoint de autenticación
-    LOGIN: ENV.WEBHOOK_LOGIN || '/webhook-test/login',
+    LOGIN: ENV.WEBHOOK_LOGIN || '/webhook/login',
 
     // Endpoint para el chat - usa el mismo endpoint en ambos entornos
     // La diferencia está en la URL base (API_BASE_URL)
