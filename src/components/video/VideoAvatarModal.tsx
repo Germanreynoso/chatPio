@@ -8,7 +8,8 @@ const VOICE_FEMALE_ID = "3fac0e13ef4d42c0a30bc20e524ae43d";
 const VOICE_MALE_ID = "ec36396594a24ed182d6849ba0ea94b1";
 
 // Webhooks for Synthesia flow
-const WEBHOOK_ACCEPT_VIDEO = '/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62';
+const WEBHOOK_VALIDATE_SYNTHESIA = '/webhook-test/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
+const WEBHOOK_ACCEPT_VIDEO = import.meta.env.VITE_WEBHOOK_SYNTHESIA_VIDEO_GENERATION || '/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62';
 const WEBHOOK_REGENERATE_SCRIPT = '/webhook/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
 
 // Type for the preview data from n8n
@@ -29,9 +30,6 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [avatarId, setAvatarId] = useState('');
   const [voiceId, setVoiceId] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState('medio');
-  const [selectedPosition, setSelectedPosition] = useState('centro');
-  const [selectedBackground, setSelectedBackground] = useState('oficina');
   const [script, setScript] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('es');
   const [selectedVoice, setSelectedVoice] = useState('natural');
@@ -49,6 +47,9 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [synthesiaPreview, setSynthesiaPreview] = useState<SynthesiaPreviewData | null>(null);
   const [isAcceptingVideo, setIsAcceptingVideo] = useState(false);
   const [isRegeneratingScript, setIsRegeneratingScript] = useState(false);
+  const [editedValidation, setEditedValidation] = useState('');
+  const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
+  const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
 
   useEffect(() => {
     if (selectedAvatar === 'maria') {
@@ -70,13 +71,6 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
     { id: 'david', nombre: 'David', descripcion: 'Presentador deportivo', imagen: '👨‍🏫' }
   ];
 
-  const fondos = [
-    { id: 'oficina', nombre: 'Oficina moderna', preview: '🏢' },
-    { id: 'estudio', nombre: 'Estudio de noticias', preview: '📺' },
-    { id: 'salon', nombre: 'Salón ejecutivo', preview: '🪑' },
-    { id: 'verde', nombre: 'Pantalla verde', preview: '🟢' },
-    { id: 'personalizado', nombre: 'Fondo personalizado', preview: '🎨' }
-  ];
 
   const plataformas = [
     { id: 'youtube', nombre: 'YouTube', formato: 'horizontal', resolucion: '1080p' },
@@ -100,9 +94,6 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const handleGenerateVideoWithHeyGen = async () => {
     const formData = {
       avatar_id: avatarId,
-      background: backgroundUrl || selectedBackground,
-      background_url: backgroundUrl,
-      background_type: backgroundUrl ? 'url' : 'preset',
       ratio: outputFormat === 'horizontal' ? '16:9' : outputFormat === 'vertical' ? '9:16' : '1:1',
       video_size: resolution === '1080p' ? '1920x1080' : resolution === '720p' ? '1280x720' : '3840x2160',
       script: {
@@ -115,8 +106,6 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
         enabled: true,
         text: subtitleText || script // Use custom subtitle text or fallback to script
       } : { enabled: false },
-      selectedPlan,
-      selectedPosition,
       selectedLanguage,
       selectedVoice,
       outputFormat,
@@ -178,9 +167,6 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const handleGenerateVideoWithSynthesia = async () => {
     const formData = {
       avatar_id: avatarId,
-      selectedPlan,
-      selectedPosition,
-      selectedBackground,
       script,
       selectedLanguage,
       voice: voiceId,
@@ -196,7 +182,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
     setGeneratedMessage(null); // Reset message
 
     try {
-      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.SYNTHESIA_VIDEO_GENERATION), {
+      const response = await fetch(API_CONFIG.getFullUrl(WEBHOOK_VALIDATE_SYNTHESIA), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,6 +212,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           if (result.ok && result.data && result.data.title && result.data.description && result.data.script) {
             // Show preview instead of generating video directly
             setSynthesiaPreview(result);
+            setEditedValidation(result.data.script);
             console.log('Vista previa de Synthesia configurada:', result);
           } else if (result.data?.bot_response) {
             // Fallback to old behavior if response has bot_response
@@ -301,6 +288,71 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       alert(`Error en la solicitud: ${error}`);
     } finally {
       setIsAcceptingVideo(false);
+    }
+  };
+
+  // Handler for "Continuar con Synthesia" button
+  const handleContinueWithSynthesia = async () => {
+    const formData = {
+      avatar_id: avatarId,
+      script,
+      selectedLanguage,
+      voice: voiceId,
+      outputFormat,
+      resolution,
+      platform,
+      videoType: 'avatar_synthesia'
+    };
+
+    console.log('Enviando datos para continuar con Synthesia:', formData);
+    setIsGeneratingSynthesia(true);
+    setSynthesiaPreview(null); // Reset preview
+    setGeneratedMessage(null); // Reset message
+
+    try {
+      const response = await fetch(API_CONFIG.getFullUrl(WEBHOOK_VALIDATE_SYNTHESIA), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta de continuar con Synthesia:', response.status, response.statusText);
+
+      if (response.ok) {
+        try {
+          const result = await response.json();
+          console.log('Video con Synthesia continuado exitosamente:', result);
+
+          // Extraer el mensaje del bot_response
+          const message = result.data?.bot_response;
+          if (message) {
+            setGeneratedMessage(message);
+          } else {
+            alert('Video con Synthesia continuado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+          }
+        } catch (jsonError) {
+          console.error('Error al parsear JSON:', jsonError);
+          // Si no es JSON válido, intentar obtener como texto plano
+          const textResponse = await response.text();
+          console.log('Respuesta como texto:', textResponse);
+          if (textResponse) {
+            setGeneratedMessage(textResponse);
+          } else {
+            alert('Video con Synthesia continuado, pero la respuesta no es válida. Revisa la consola para más detalles.');
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error al continuar con Synthesia:', response.statusText, errorText);
+        alert(`Error al continuar con Synthesia: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de continuar con Synthesia:', error);
+      alert(`Error en la solicitud: ${error}`);
+    } finally {
+      setIsGeneratingSynthesia(false);
     }
   };
 
@@ -394,209 +446,43 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de plano</label>
-              <select 
-                value={selectedPlan}
-                onChange={(e) => setSelectedPlan(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="primer">Primer plano</option>
-                <option value="medio">Plano medio</option>
-                <option value="largo">Plano largo</option>
-              </select>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Posición en pantalla</label>
-              <select 
-                value={selectedPosition}
-                onChange={(e) => setSelectedPosition(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="centro">Centro</option>
-                <option value="izquierda">Izquierda</option>
-                <option value="derecha">Derecha</option>
-                <option value="circulo">En círculo</option>
-              </select>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fondo</label>
-              <select
-                value={selectedBackground}
-                onChange={(e) => setSelectedBackground(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {fondos.map((fondo) => (
-                  <option key={fondo.id} value={fondo.id}>
-                    {fondo.preview} {fondo.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+<div className="flex flex-col sm:flex-row gap-3">
+  <button
+    onClick={() => setShowHeyGenRestrictions(true)}
+    className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium"
+  >
+    Conoce las restricciones de HeyGen
+  </button>
+  <button
+    onClick={() => setShowSynthesiaRestrictions(true)}
+    className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium"
+  >
+    Conoce las restricciones de Synthesia
+  </button>
+</div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL de fondo personalizado (opcional)
-            </label>
-            <input
-              type="url"
-              value={backgroundUrl}
-              onChange={(e) => setBackgroundUrl(e.target.value)}
-              placeholder="https://ejemplo.com/imagen-fondo.jpg"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Si proporcionas una URL de imagen, se usará como fondo en lugar del preset seleccionado arriba.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <FileText className="inline w-4 h-4 mr-1" />
-              Guión del vídeo
-            </label>
-            <textarea
-              value={script}
-              onChange={(e) => setScript(e.target.value)}
-              placeholder="Escribe aquí el texto que quieres que diga el avatar. Máximo 500 palabras para mantener la duración del vídeo en límites razonables."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
-              maxLength={3000}
-            />
-            <div className="text-right text-xs text-gray-500 mt-1">
-              {script.length}/3000 caracteres
-            </div>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center mb-3">
-              <input
-                type="checkbox"
-                id="includeSubtitles"
-                checked={includeSubtitles}
-                onChange={(e) => setIncludeSubtitles(e.target.checked)}
-                className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="includeSubtitles" className="text-sm font-medium text-gray-700">
-                Incluir subtítulos en el vídeo
-              </label>
-            </div>
-            {includeSubtitles && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Texto de subtítulos (opcional)
-                </label>
-                <textarea
-                  value={subtitleText}
-                  onChange={(e) => setSubtitleText(e.target.value)}
-                  placeholder="Si no especificas texto, se usarán los subtítulos generados automáticamente del script."
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px]"
-                  maxLength={3000}
-                />
-                <div className="text-right text-xs text-gray-500 mt-1">
-                  {subtitleText.length}/3000 caracteres
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Globe className="inline w-4 h-4 mr-1" />
-                Idioma
-              </label>
-              <select 
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="es">Español</option>
-                <option value="en">English</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Estilo de voz</label>
-              <select 
-                value={selectedVoice}
-                onChange={(e) => setSelectedVoice(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="natural">Natural</option>
-                <option value="profesional">Profesional</option>
-                <option value="energico">Enérgico</option>
-                <option value="calmado">Calmado</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Configuración técnica
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Monitor className="inline w-4 h-4 mr-1" />
-                  Plataforma destino
-                </label>
-                <select 
-                  value={platform}
-                  onChange={(e) => handlePlatformChange(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {plataformas.map((plat) => (
-                    <option key={plat.id} value={plat.id}>{plat.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Formato</label>
-                <select 
-                  value={outputFormat}
-                  onChange={(e) => setOutputFormat(e.target.value)}
-                  disabled={platform !== 'personalizado'}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="horizontal">Horizontal (16:9)</option>
-                  <option value="vertical">Vertical (9:16)</option>
-                  <option value="cuadrado">Cuadrado (1:1)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Resolución</label>
-                <select 
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                  disabled={platform !== 'personalizado'}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="720p">720p</option>
-                  <option value="1080p">1080p (recomendado)</option>
-                  <option value="4k">4K (mayor coste)</option>
-                </select>
-              </div>
-            </div>
-          </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    <FileText className="inline w-4 h-4 mr-1" />
+    Idea de video
+  </label>
+  <textarea
+    value={script}
+    onChange={(e) => setScript(e.target.value)}
+    placeholder="Escribe aquí el texto que quieres que diga el avatar. Máximo 500 palabras para mantener la duración del vídeo en límites razonables."
+    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[250px]"
+    maxLength={3000}
+  />
+  <div className="text-right text-xs text-gray-500 mt-1">
+    {script.length}/3000 caracteres
+  </div>
+</div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <h4 className="font-medium text-amber-800 mb-2">💰 Información de coste</h4>
             <p className="text-sm text-amber-700">
-              Coste estimado: 0,15-0,40$ por segundo de vídeo generado. 
-              Un vídeo de 30 segundos costaría aproximadamente 4,50-12$ según la complejidad y resolución.
+              Selecciona el motor que quieras utilizar para la generacion del video, recuerda que cada uno tiene sus propias restricciones
             </p>
           </div>
 
@@ -613,7 +499,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 </>
               ) : (
                 <>
-                  🎬 Generar vídeo con HeyGen
+                  🎬 Validar idea con HeyGen
                 </>
               )}
             </button>
@@ -629,14 +515,13 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 </>
               ) : (
                 <>
-                  🎥 Generar vídeo con Synthesia
+                  🎥 Validar idea con Synthesia
                 </>
               )}
             </button>
-            <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors">
-              Cancelar
-            </button>
           </div>
+
+
 
           {/* Synthesia Preview Section */}
           {synthesiaPreview && (
@@ -646,29 +531,14 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 Vista previa del contenido generado
               </h4>
               
-              <div className="space-y-4 bg-white p-4 rounded-lg border border-purple-100">
-                {/* Title */}
+              <div className="bg-white p-4 rounded-lg border border-purple-100">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Título:</label>
-                  <div className="text-gray-900 bg-gray-50 p-2 rounded border">
-                    {synthesiaPreview.data?.title || 'Sin título'}
-                  </div>
-                </div>
-                
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción:</label>
-                  <div className="text-gray-900 bg-gray-50 p-2 rounded border">
-                    {synthesiaPreview.data?.description || 'Sin descripción'}
-                  </div>
-                </div>
-                
-                {/* Script */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Guion:</label>
-                  <div className="text-gray-900 bg-gray-50 p-3 rounded border max-h-48 overflow-y-auto whitespace-pre-wrap">
-                    {synthesiaPreview.data?.script || 'Sin guion'}
-                  </div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Validación o sugerencia de edición de la idea:</label>
+                  <textarea
+                    value={editedValidation}
+                    onChange={(e) => setEditedValidation(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px] max-h-48 overflow-y-auto whitespace-pre-wrap"
+                  />
                 </div>
               </div>
 
@@ -691,47 +561,203 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                     </>
                   )}
                 </button>
-                <button
-                  onClick={handleRegenerateScript}
-                  disabled={isRegeneratingScript}
-                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {isRegeneratingScript ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Regenerando...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4" />
-                      Regenerar guion
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           )}
 
           {generatedMessage && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h4 className="font-medium text-green-800 mb-2 flex items-center">
-                <Play className="w-4 h-4 mr-1" />
-                Video con avatar generado exitosamente
-              </h4>
               <div className="text-sm text-green-700 bg-white p-3 rounded border max-h-40 overflow-y-auto">
                 {generatedMessage}
               </div>
             </div>
           )}
 
+          {generatedMessage && (
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <button
+                onClick={handleGenerateVideoWithHeyGen}
+                disabled={isGeneratingHeyGen}
+                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isGeneratingHeyGen ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    🎬 Continuar con la generación de video con HeyGen
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleContinueWithSynthesia}
+                disabled={isGeneratingSynthesia}
+                className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isGeneratingSynthesia ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    🎥 Continuar con la generación del video con Synthesia
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-700">
-              <strong>Modo prototipo:</strong> Los vídeos generados incluirán marca de agua. 
+              <strong>Modo prototipo:</strong> Los vídeos generados incluirán marca de agua.
               Para uso comercial sin marca de agua se requiere plan específico.
             </p>
           </div>
+
+          <div className="flex justify-end pt-4">
+            <button onClick={onClose} className="bg-gray-100 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-200 transition-colors">
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* HeyGen Restrictions Modal */}
+      {showHeyGenRestrictions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowHeyGenRestrictions(false)} />
+          <div className="relative max-w-2xl w-full mx-4 bg-white rounded-2xl shadow-udlp-lg ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Restricciones de Contenido de HeyGen
+              </h2>
+              <button
+                onClick={() => setShowHeyGenRestrictions(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Contenido Estrictamente Prohibido</h3>
+              <p className="text-gray-600 mb-6">
+                Los siguientes tipos de contenido NO están permitidos
+              </p>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Política y Elecciones</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Contenido político o de campañas</li>
+                    <li>Promoción de partidos políticos</li>
+                    <li>Contenido relacionado con elecciones</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Contenido Violento o Criminal</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Promoción de violencia o actividades criminales</li>
+                    <li>Armas o municiones</li>
+                    <li>Organizaciones terroristas</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Fraudes y Estafas</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Esquemas piramidales o Ponzi</li>
+                    <li>Estafas de criptomonedas</li>
+                    <li>Fraudes financieros</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Contenido Sexual Explícito</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Actos sexuales, desnudos o contenido pornográfico</li>
+                    <li>Excepción: Material educativo claramente etiquetado</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Menores de Edad</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Cualquier avatar que represente menores de 18 años</li>
+                    <li>Contenido que involucre menores</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Discurso de Odio y Acoso</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Ataques a personas, razas, religiones o géneros</li>
+                    <li>Lenguaje ofensivo o amenazas</li>
+                    <li>Bullying o acoso</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Desinformación</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Información falsa sobre salud</li>
+                    <li>Noticias falsas o manipuladas</li>
+                    <li>Contenido que manipule elecciones</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-2">Propiedad Intelectual</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Uso de contenido con derechos de autor sin permiso</li>
+                    <li>Violación de marcas registradas</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Synthesia Restrictions Modal */}
+      {showSynthesiaRestrictions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowSynthesiaRestrictions(false)} />
+          <div className="relative max-w-2xl w-full mx-4 bg-white rounded-2xl shadow-udlp-lg ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Restricciones de Synthesia para Crear Videos
+              </h2>
+              <button
+                onClick={() => setShowSynthesiaRestrictions(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                A continuación encontrarás un resumen claro y fácil de entender sobre lo que no se puede hacer al generar un video con Synthesia:
+              </p>
+              <div className="space-y-4 text-sm text-gray-700">
+                <p>• No se pueden usar voces o caras de personas reales sin su autorización. Nada de imitar celebridades, políticos o cualquier persona sin permiso.</p>
+                <p>• No se puede generar contenido engañoso o manipulado. Está prohibido crear videos que parezcan hechos por alguien real con la intención de confundir, estafar o falsificar información.</p>
+                <p>• No se puede producir contenido dañino, violento o discriminatorio. Incluye discursos de odio, amenazas, acoso, violencia gráfica o cualquier mensaje que ataque a un grupo o individuo.</p>
+                <p>• No se pueden usar guiones sexualmente explícitos o inapropiados. La plataforma bloquea contenido erótico, insinuaciones fuertes o material para adultos.</p>
+                <p>• No se pueden generar instrucciones peligrosas o ilegales. Nada de guías sobre actividades criminales, autolesiones, armas, hackeo o sustancias ilegales.</p>
+                <p>• No se puede suplantar identidad o hacerse pasar por instituciones. Prohibido crear videos que imiten organizaciones oficiales o empresas sin autorización.</p>
+                <p>• No se permite contenido médico, legal o financiero que pueda inducir a error. No genera diagnósticos, recetas médicas, asesoramiento legal ni promesas financieras.</p>
+                <p>• No se pueden usar marcas, logos o material protegido sin derechos. Evita usar contenido con copyright o elementos de marcas registradas sin autorización.</p>
+                <p>• No se pueden subir imágenes o recursos visuales que violen derechos de terceros. Nada de fotos privadas, material obtenido sin permiso o imágenes sensibles.</p>
+                <p>• No se pueden generar llamados a acciones dañinas o peligrosas. La plataforma bloquea mensajes que incentiven violencia, vandalismo, discursos extremistas o daño a otros.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -23,6 +23,17 @@ export default defineConfig({
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         }
+      },
+      // Proxy para webhooks de n8n
+      '/webhook-test': {
+        target: 'https://n8n.icc-e.org',
+        changeOrigin: true,
+        secure: false
+      },
+      '/webhook': {
+        target: 'https://n8n.icc-e.org',
+        changeOrigin: true,
+        secure: false
       }
     }
   },
