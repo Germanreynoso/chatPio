@@ -10,8 +10,8 @@ const VOICE_FEMALE_ID = "3fac0e13ef4d42c0a30bc20e524ae43d";
 const VOICE_MALE_ID = "ec36396594a24ed182d6849ba0ea94b1";
 
 // Webhooks for Synthesia flow
-const WEBHOOK_VALIDATE_SYNTHESIA = '/webhook-test/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
-const WEBHOOK_ACCEPT_VIDEO = 'https://n8n.icc-e.org/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62';
+const WEBHOOK_VALIDATE_SYNTHESIA = 'https://n8n.icc-e.org/webhook-test/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
+const WEBHOOK_ACCEPT_VIDEO = 'https://n8n.icc-e.org/webhook-test/01669e58-6bf2-430e-87ee-4493e55e0039';
 const WEBHOOK_REGENERATE_SCRIPT = '/webhook/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
 
 // Type for the preview data from n8n
@@ -29,32 +29,32 @@ type VideoAvatarModalProps = {
 };
 
 const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
-   const [selectedAvatar, setSelectedAvatar] = useState('');
-   const [avatarId, setAvatarId] = useState('');
-   const [voiceId, setVoiceId] = useState('');
-   const [script, setScript] = useState('');
-   const [selectedLanguage, setSelectedLanguage] = useState('es');
-   const [selectedVoice, setSelectedVoice] = useState('natural');
-   const [outputFormat, setOutputFormat] = useState('horizontal');
-   const [resolution, setResolution] = useState('1080p');
-   const [platform, setPlatform] = useState('youtube');
-   const [isGeneratingHeyGen, setIsGeneratingHeyGen] = useState(false);
-   const [isGeneratingSynthesia, setIsGeneratingSynthesia] = useState(false);
-   const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
-   const [includeSubtitles, setIncludeSubtitles] = useState(false);
-   const [subtitleText, setSubtitleText] = useState('');
-   const [backgroundUrl, setBackgroundUrl] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('');
+  const [avatarId, setAvatarId] = useState('');
+  const [voiceId, setVoiceId] = useState('');
+  const [script, setScript] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('es');
+  const [selectedVoice, setSelectedVoice] = useState('natural');
+  const [outputFormat, setOutputFormat] = useState('horizontal');
+  const [resolution, setResolution] = useState('1080p');
+  const [platform, setPlatform] = useState('youtube');
+  const [isGeneratingHeyGen, setIsGeneratingHeyGen] = useState(false);
+  const [isGeneratingSynthesia, setIsGeneratingSynthesia] = useState(false);
+  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
+  const [includeSubtitles, setIncludeSubtitles] = useState(false);
+  const [subtitleText, setSubtitleText] = useState('');
+  const [backgroundUrl, setBackgroundUrl] = useState('');
 
-   // New state for Synthesia preview
-   const [synthesiaPreview, setSynthesiaPreview] = useState<SynthesiaPreviewData | null>(null);
-   const [isAcceptingVideo, setIsAcceptingVideo] = useState(false);
-   const [isRegeneratingScript, setIsRegeneratingScript] = useState(false);
-   const [editedValidation, setEditedValidation] = useState('');
-   const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
-   const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
+  // New state for Synthesia preview
+  const [synthesiaPreview, setSynthesiaPreview] = useState<SynthesiaPreviewData | null>(null);
+  const [isAcceptingVideo, setIsAcceptingVideo] = useState(false);
+  const [isRegeneratingScript, setIsRegeneratingScript] = useState(false);
+  const [editedValidation, setEditedValidation] = useState('');
+  const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
+  const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
 
-   const { handleError } = useErrorHandler('avatar-video-generation');
-   const { showError } = useGlobalError();
+  const { handleError } = useErrorHandler('avatar-video-generation');
+  const { showError } = useGlobalError();
 
   useEffect(() => {
     if (selectedAvatar === 'maria') {
@@ -212,7 +212,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           setGeneratedMessage('Solicitud enviada correctamente. El servidor está procesando tu petición.');
           return;
         }
-        
+
         try {
           const result = JSON.parse(responseText);
           console.log('JSON parseado de Synthesia:', result);
@@ -278,7 +278,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       if (response.ok) {
         const responseText = await response.text();
         console.log('Respuesta de aceptar video:', responseText);
-        
+
         try {
           const result = JSON.parse(responseText);
           const message = result.data?.bot_response || result.message || 'Video aceptado y en proceso de generación';
@@ -286,7 +286,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
         } catch {
           setGeneratedMessage(responseText || 'Video aceptado y en proceso de generación');
         }
-        
+
         // Clear the preview after successful acceptance
         setSynthesiaPreview(null);
       } else {
@@ -394,7 +394,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       if (response.ok) {
         const responseText = await response.text();
         console.log('Respuesta de regenerar guion:', responseText);
-        
+
         try {
           const result = JSON.parse(responseText);
           console.log('JSON parseado de regenerar guion:', result);
@@ -451,11 +451,10 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 <div
                   key={avatar.id}
                   onClick={() => setSelectedAvatar(avatar.id)}
-                  className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                    selectedAvatar === avatar.id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${selectedAvatar === avatar.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                 >
                   <div className="text-3xl text-center mb-2">{avatar.imagen}</div>
                   <div className="text-sm font-medium text-center">{avatar.nombre}</div>
@@ -467,37 +466,37 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
 
 
-<div className="flex flex-col sm:flex-row gap-3">
-  <button
-    onClick={() => setShowHeyGenRestrictions(true)}
-    className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium"
-  >
-    Conoce las restricciones de HeyGen
-  </button>
-  <button
-    onClick={() => setShowSynthesiaRestrictions(true)}
-    className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium"
-  >
-    Conoce las restricciones de Synthesia
-  </button>
-</div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => setShowHeyGenRestrictions(true)}
+              className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium"
+            >
+              Conoce las restricciones de HeyGen
+            </button>
+            <button
+              onClick={() => setShowSynthesiaRestrictions(true)}
+              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium"
+            >
+              Conoce las restricciones de Synthesia
+            </button>
+          </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    <FileText className="inline w-4 h-4 mr-1" />
-    Idea de video
-  </label>
-  <textarea
-    value={script}
-    onChange={(e) => setScript(e.target.value)}
-    placeholder="Escribe aquí el texto que quieres que diga el avatar. Máximo 500 palabras para mantener la duración del vídeo en límites razonables."
-    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[250px]"
-    maxLength={3000}
-  />
-  <div className="text-right text-xs text-gray-500 mt-1">
-    {script.length}/3000 caracteres
-  </div>
-</div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FileText className="inline w-4 h-4 mr-1" />
+              Idea de video
+            </label>
+            <textarea
+              value={script}
+              onChange={(e) => setScript(e.target.value)}
+              placeholder="Escribe aquí el texto que quieres que diga el avatar. Máximo 500 palabras para mantener la duración del vídeo en límites razonables."
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[250px]"
+              maxLength={3000}
+            />
+            <div className="text-right text-xs text-gray-500 mt-1">
+              {script.length}/3000 caracteres
+            </div>
+          </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <p className="text-sm text-amber-700">
@@ -549,7 +548,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 <FileText className="w-4 h-4 mr-2" />
                 Vista previa del contenido generado
               </h4>
-              
+
               <div className="bg-white p-4 rounded-lg border border-purple-100">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Validación o sugerencia de edición de la idea:</label>
@@ -592,42 +591,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
             </div>
           )}
 
-          {generatedMessage && (
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button
-                onClick={handleGenerateVideoWithHeyGen}
-                disabled={isGeneratingHeyGen}
-                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isGeneratingHeyGen ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    🎬 Continuar con la generación de video con HeyGen
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleContinueWithSynthesia}
-                disabled={isGeneratingSynthesia}
-                className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isGeneratingSynthesia ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    🎥 Continuar con la generación del video con Synthesia
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-700">
