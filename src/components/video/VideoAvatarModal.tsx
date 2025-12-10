@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Camera, Settings, FileText, Globe, Monitor, ChevronDown, Check, RefreshCw } from 'lucide-react';
 import { API_CONFIG } from '../../config/api';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { useGlobalError } from '../../contexts/GlobalErrorContext';
 
 const AVATAR_FEMALE_ID = "Hada_Casual_Cup_Front_public";
 const AVATAR_MALE_ID = "Armando_Casual_Front_public";
@@ -9,7 +11,7 @@ const VOICE_MALE_ID = "ec36396594a24ed182d6849ba0ea94b1";
 
 // Webhooks for Synthesia flow
 const WEBHOOK_VALIDATE_SYNTHESIA = '/webhook-test/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
-const WEBHOOK_ACCEPT_VIDEO = import.meta.env.VITE_WEBHOOK_SYNTHESIA_VIDEO_GENERATION || '/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62';
+const WEBHOOK_ACCEPT_VIDEO = 'https://n8n.icc-e.org/webhook-test/d5a0a76f-fd93-4624-bf1f-6d4c760bfb62';
 const WEBHOOK_REGENERATE_SCRIPT = '/webhook/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
 
 // Type for the preview data from n8n
@@ -27,29 +29,32 @@ type VideoAvatarModalProps = {
 };
 
 const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
-  const [selectedAvatar, setSelectedAvatar] = useState('');
-  const [avatarId, setAvatarId] = useState('');
-  const [voiceId, setVoiceId] = useState('');
-  const [script, setScript] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('es');
-  const [selectedVoice, setSelectedVoice] = useState('natural');
-  const [outputFormat, setOutputFormat] = useState('horizontal');
-  const [resolution, setResolution] = useState('1080p');
-  const [platform, setPlatform] = useState('youtube');
-  const [isGeneratingHeyGen, setIsGeneratingHeyGen] = useState(false);
-  const [isGeneratingSynthesia, setIsGeneratingSynthesia] = useState(false);
-  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
-  const [includeSubtitles, setIncludeSubtitles] = useState(false);
-  const [subtitleText, setSubtitleText] = useState('');
-  const [backgroundUrl, setBackgroundUrl] = useState('');
-  
-  // New state for Synthesia preview
-  const [synthesiaPreview, setSynthesiaPreview] = useState<SynthesiaPreviewData | null>(null);
-  const [isAcceptingVideo, setIsAcceptingVideo] = useState(false);
-  const [isRegeneratingScript, setIsRegeneratingScript] = useState(false);
-  const [editedValidation, setEditedValidation] = useState('');
-  const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
-  const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
+   const [selectedAvatar, setSelectedAvatar] = useState('');
+   const [avatarId, setAvatarId] = useState('');
+   const [voiceId, setVoiceId] = useState('');
+   const [script, setScript] = useState('');
+   const [selectedLanguage, setSelectedLanguage] = useState('es');
+   const [selectedVoice, setSelectedVoice] = useState('natural');
+   const [outputFormat, setOutputFormat] = useState('horizontal');
+   const [resolution, setResolution] = useState('1080p');
+   const [platform, setPlatform] = useState('youtube');
+   const [isGeneratingHeyGen, setIsGeneratingHeyGen] = useState(false);
+   const [isGeneratingSynthesia, setIsGeneratingSynthesia] = useState(false);
+   const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
+   const [includeSubtitles, setIncludeSubtitles] = useState(false);
+   const [subtitleText, setSubtitleText] = useState('');
+   const [backgroundUrl, setBackgroundUrl] = useState('');
+
+   // New state for Synthesia preview
+   const [synthesiaPreview, setSynthesiaPreview] = useState<SynthesiaPreviewData | null>(null);
+   const [isAcceptingVideo, setIsAcceptingVideo] = useState(false);
+   const [isRegeneratingScript, setIsRegeneratingScript] = useState(false);
+   const [editedValidation, setEditedValidation] = useState('');
+   const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
+   const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
+
+   const { handleError } = useErrorHandler('avatar-video-generation');
+   const { showError } = useGlobalError();
 
   useEffect(() => {
     if (selectedAvatar === 'maria') {
@@ -138,7 +143,8 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           if (message) {
             setGeneratedMessage(message);
           } else {
-            alert('Video con avatar generado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+            handleError(new Error('Video con avatar generado, pero no se pudo obtener el mensaje'));
+            showError();
           }
         } catch (jsonError) {
           console.error('Error al parsear JSON:', jsonError);
@@ -148,17 +154,20 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           if (textResponse) {
             setGeneratedMessage(textResponse);
           } else {
-            alert('Video con avatar generado, pero la respuesta no es válida. Revisa la consola para más detalles.');
+            handleError(new Error('Video con avatar generado, pero la respuesta no es válida'));
+            showError();
           }
         }
       } else {
         const errorText = await response.text();
         console.error('Error al generar el video con avatar:', response.statusText, errorText);
-        alert(`Error al generar el video con avatar: ${response.statusText}`);
+        handleError(new Error(`Error al generar el video con avatar: ${response.statusText}`));
+        showError();
       }
     } catch (error) {
       console.error('Error en la solicitud:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+      showError();
     } finally {
       setIsGeneratingHeyGen(false);
     }
@@ -236,11 +245,13 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
         }
       } else {
         console.error('Error al generar el video con avatar:', response.statusText, responseText);
-        alert(`Error al generar el video con avatar: ${response.statusText}\n${responseText}`);
+        handleError(new Error(`Error al generar el video con avatar: ${response.statusText}`));
+        showError();
       }
     } catch (error) {
       console.error('Error en la solicitud:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+      showError();
     } finally {
       setIsGeneratingSynthesia(false);
     }
@@ -281,11 +292,13 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       } else {
         const errorText = await response.text();
         console.error('Error al aceptar el video:', response.statusText, errorText);
-        alert(`Error al aceptar el video: ${response.statusText}`);
+        handleError(new Error(`Error al aceptar el video: ${response.statusText}`));
+        showError();
       }
     } catch (error) {
       console.error('Error en la solicitud de aceptar video:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+      showError();
     } finally {
       setIsAcceptingVideo(false);
     }
@@ -330,7 +343,8 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           if (message) {
             setGeneratedMessage(message);
           } else {
-            alert('Video con Synthesia continuado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+            handleError(new Error('Video con Synthesia continuado, pero no se pudo obtener el mensaje'));
+            showError();
           }
         } catch (jsonError) {
           console.error('Error al parsear JSON:', jsonError);
@@ -340,17 +354,20 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           if (textResponse) {
             setGeneratedMessage(textResponse);
           } else {
-            alert('Video con Synthesia continuado, pero la respuesta no es válida. Revisa la consola para más detalles.');
+            handleError(new Error('Video con Synthesia continuado, pero la respuesta no es válida'));
+            showError();
           }
         }
       } else {
         const errorText = await response.text();
         console.error('Error al continuar con Synthesia:', response.statusText, errorText);
-        alert(`Error al continuar con Synthesia: ${response.statusText}`);
+        handleError(new Error(`Error al continuar con Synthesia: ${response.statusText}`));
+        showError();
       }
     } catch (error) {
       console.error('Error en la solicitud de continuar con Synthesia:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+      showError();
     } finally {
       setIsGeneratingSynthesia(false);
     }
@@ -399,11 +416,13 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       } else {
         const errorText = await response.text();
         console.error('Error al regenerar el guion:', response.statusText, errorText);
-        alert(`Error al regenerar el guion: ${response.statusText}`);
+        handleError(new Error(`Error al regenerar el guion: ${response.statusText}`));
+        showError();
       }
     } catch (error) {
       console.error('Error en la solicitud de regenerar guion:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+      showError();
     } finally {
       setIsRegeneratingScript(false);
     }

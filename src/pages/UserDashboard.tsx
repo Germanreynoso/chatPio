@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import FormExamplesModal from '../components/FormExamplesModal';
+import { FileText, Eye } from 'lucide-react';
 
 const UserDashboard = () => {
   const { user } = useAuth();
+  const [showExamplesModal, setShowExamplesModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -18,7 +21,7 @@ const UserDashboard = () => {
             </p>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Chat Interface */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
@@ -51,10 +54,47 @@ const UserDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Form Examples */}
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Ejemplos de Formularios
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        Aprende con ejemplos
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <button
+                    onClick={() => setShowExamplesModal(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Ver Ejemplos
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
+
+      {/* Examples Modal */}
+      {showExamplesModal && (
+        <FormExamplesModal onClose={() => setShowExamplesModal(false)} />
+      )}
     </div>
   );
 };

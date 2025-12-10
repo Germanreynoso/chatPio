@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Loader2, Play, Pause } from 'lucide-react';
+import { MessageSquare, Loader2, Play, Pause, Lightbulb } from 'lucide-react';
 import { API_CONFIG } from './config/api';
 import ImageGenerationModal from './components/image-generator/ImageGenerationModal';
 import AudioPodcastModal from './components/audio/AudioPodcastModal';
 import VideoAvatarModal from './components/video/VideoAvatarModal';
 import VideoGenerationModal from './components/video/VideoGenerationModal';
+import ExamplesModal from './components/ExamplesModal';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
 // Si estás usando una librería de Supabase en tu entorno, esta línea debería funcionar.
@@ -81,6 +82,7 @@ const UDLPChatInterface = () => {
   const [showAudioModal, setShowAudioModal] = useState<boolean>(false);
   const [showVideoAvatarModal, setShowVideoAvatarModal] = useState<boolean>(false);
   const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
+  const [showExamplesModal, setShowExamplesModal] = useState<boolean>(false);
   const [lastFormData, setLastFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number} | null>(null);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
   
@@ -165,6 +167,26 @@ const UDLPChatInterface = () => {
     } else {
       setSelectedLanguages(prev => prev.filter(l => l !== language));
     }
+  };
+
+  const handleCopyExample = (example: any) => {
+    // Cerrar el modal de ejemplos
+    setShowExamplesModal(false);
+
+    // Mostrar el formulario de contenido con los datos del ejemplo
+    setTimeout(() => {
+      addMessage({
+        type: 'bot',
+        content: `Perfecto! He precargado el formulario con el ejemplo "${example.titulo}". Solo ajusta los detalles específicos para tu caso.`,
+        showContentForm: true,
+        formData: {
+          tema: example.tema,
+          mensaje: example.mensaje,
+          contexto: example.contexto,
+          audiencia: example.audiencia
+        }
+      });
+    }, 300);
   };
 
   const handleSubmit = () => {
@@ -670,9 +692,20 @@ const UDLPChatInterface = () => {
   const InitialForm: React.FC = () => (
     <div className="space-y-4 bg-udlp-gray p-4 rounded-xl mt-3 shadow-udlp">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Área que necesita comunicar
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-gray-700">
+            Área que necesita comunicar
+          </label>
+          {selectedArea && (
+            <button
+              onClick={() => setShowExamplesModal(true)}
+              className="flex items-center gap-1 text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+            >
+              <Lightbulb className="w-4 h-4" />
+              Ver ejemplos
+            </button>
+          )}
+        </div>
         <select
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
           value={selectedArea}
@@ -738,12 +771,12 @@ const UDLPChatInterface = () => {
     </div>
   );
 
-  const ContentForm: React.FC = () => {
+  const ContentForm: React.FC<{ initialData?: {tema: string; mensaje: string; contexto: string; audiencia: string;} }> = ({ initialData }) => {
     const [formData, setFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string;}>({
-      tema: '',
-      mensaje: '',
-      contexto: '',
-      audiencia: ''
+      tema: initialData?.tema || '',
+      mensaje: initialData?.mensaje || '',
+      contexto: initialData?.contexto || '',
+      audiencia: initialData?.audiencia || ''
     });
     const [wordCount, setWordCount] = useState<number>(800);
     const [wordCountMode, setWordCountMode] = useState<'short' | 'medium' | 'long' | 'custom'>('medium');
@@ -1210,7 +1243,7 @@ const UDLPChatInterface = () => {
                     )}
                     
                     {message.showForm && <InitialForm />}
-                    {message.showContentForm && <ContentForm />}
+                    {message.showContentForm && <ContentForm initialData={message.formData} />}
                     
                     {message.showActions && (
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-5 gap-2">
@@ -1308,6 +1341,13 @@ const UDLPChatInterface = () => {
     )}
     {showVideoModal && (
       <VideoGenerationModal onClose={() => setShowVideoModal(false)} />
+    )}
+    {showExamplesModal && (
+      <ExamplesModal
+        area={selectedArea}
+        onClose={() => setShowExamplesModal(false)}
+        onCopyExample={handleCopyExample}
+      />
     )}
     </>
   );

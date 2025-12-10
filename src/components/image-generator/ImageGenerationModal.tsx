@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Image, Users, Globe2, Zap, Palette, Eye, Type, Layout, Settings, Sparkles, FileImage, Lightbulb, X } from 'lucide-react';
 import imagePreview from '../../assets/image2.jpg';
 import { API_CONFIG } from '../../config/api';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { useGlobalError } from '../../contexts/GlobalErrorContext';
 
 export interface ImageGenerationModalProps {
   onClose: () => void;
@@ -9,24 +11,27 @@ export interface ImageGenerationModalProps {
 }
 
 export default function ImageGenerationModal({ onClose, initialData }: ImageGenerationModalProps) {
-  const [characters, setCharacters] = useState('');
-  const [world, setWorld] = useState('');
-  const [action, setAction] = useState('');
-  const [visualStyle, setVisualStyle] = useState('');
-  const [sensoryElements, setSensoryElements] = useState('');
-  const [includeText, setIncludeText] = useState(false);
-  const [textContent, setTextContent] = useState('');
-  const [textPosition, setTextPosition] = useState('centro');
-  const [selectedFormat, setSelectedFormat] = useState('horizontal');
-  const [selectedResolution, setSelectedResolution] = useState('1920x1080');
-  const [selectedPlatform, setSelectedPlatform] = useState('general');
-  const [selectedModel, setSelectedModel] = useState('imagen4');
-  const [quality, setQuality] = useState('alta');
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
-  const [generatedMessage, setGeneratedMessage] = useState<string>('');
+   const [characters, setCharacters] = useState('');
+   const [world, setWorld] = useState('');
+   const [action, setAction] = useState('');
+   const [visualStyle, setVisualStyle] = useState('');
+   const [sensoryElements, setSensoryElements] = useState('');
+   const [includeText, setIncludeText] = useState(false);
+   const [textContent, setTextContent] = useState('');
+   const [textPosition, setTextPosition] = useState('centro');
+   const [selectedFormat, setSelectedFormat] = useState('horizontal');
+   const [selectedResolution, setSelectedResolution] = useState('1920x1080');
+   const [selectedPlatform, setSelectedPlatform] = useState('general');
+   const [selectedModel, setSelectedModel] = useState('imagen4');
+   const [quality, setQuality] = useState('alta');
+   const [imageUrl, setImageUrl] = useState<string | null>(null);
+   const [showPreview, setShowPreview] = useState(false);
+   const [isGenerating, setIsGenerating] = useState(false);
+   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+   const [generatedMessage, setGeneratedMessage] = useState<string>('');
+
+   const { handleError } = useErrorHandler('image-generation');
+   const { showError } = useGlobalError();
 
   // Prefill fields when initialData is provided
   useEffect(() => {
@@ -187,7 +192,8 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
             setGeneratedMessage(message);
             setShowPreview(true);
           } else {
-            alert('Imagen generada, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+            handleError(new Error('Imagen generada, pero no se pudo obtener el mensaje'));
+            showError();
           }
         } catch (jsonError) {
           console.error('Error al parsear JSON:', jsonError);
@@ -198,17 +204,20 @@ export default function ImageGenerationModal({ onClose, initialData }: ImageGene
             setGeneratedMessage(textResponse);
             setShowPreview(true);
           } else {
-            alert('Imagen generada, pero la respuesta no es válida. Revisa la consola para más detalles.');
+            handleError(new Error('Imagen generada, pero la respuesta no es válida'));
+            showError();
           }
         }
       } else {
         const errorText = await response.text();
         console.error('Error al generar la imagen:', response.statusText, errorText);
-        alert(`Error al generar la imagen: ${response.statusText}`);
+        handleError(new Error(`Error al generar la imagen: ${response.statusText}`));
+        showError();
       }
     } catch (error) {
       console.error('Error en la solicitud:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+      showError();
     } finally {
       setIsGenerating(false);
     }

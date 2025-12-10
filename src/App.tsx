@@ -1,12 +1,18 @@
 // Importaciones de React y rutas
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ServiceStatusProvider } from './contexts/ServiceStatusContext';
+import { GlobalErrorProvider, useGlobalError } from './contexts/GlobalErrorContext';
+import { setGlobalErrorNotifier } from './utils/errorLogger';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorNotification from './components/ErrorNotification';
 import UDLPChatInterface from './UDLPChatInterface';
 import Login from './pages/Login';
 import Unauthorized from './pages/Unauthorized';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ServiceStatusPage from './pages/ServiceStatusPage';
 import './App.css';
 
 // Componente de ruta raíz que redirige según la autenticación y rol
@@ -28,7 +34,8 @@ const RootRedirect = () => {
 // Componente de navegación de ejemplo
 const Navbar = () => {
   const { user, logout } = useAuth();
-  
+  const { showError } = useGlobalError();
+
   return (
     <nav className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +46,14 @@ const Navbar = () => {
             </div>
           </div>
           {user && (
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
+              {/* Test button - remove after testing */}
+              <button
+                onClick={() => showError("Servicio momentáneamente no disponible")}
+                className="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Test Error
+              </button>
               <button
                 onClick={logout}
                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -56,17 +70,33 @@ const Navbar = () => {
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
-  
+  const { isErrorVisible, errorMessage, hideError, showError } = useGlobalError();
+
+  // Initialize global error notifier
+  React.useEffect(() => {
+    setGlobalErrorNotifier(showError);
+  }, [showError]);
+
+  // Test button - remove this after testing
+  const testError = () => {
+    showError("Servicio momentáneamente no disponible");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {isAuthenticated && <Navbar />}
+      <ErrorNotification
+        message={errorMessage}
+        isVisible={isErrorVisible}
+        onClose={hideError}
+      />
       <main className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            
+
             {/* Rutas protegidas */}
             <Route path="/chat" element={
               <ProtectedRoute>
@@ -87,6 +117,12 @@ const AppContent = () => {
               </ProtectedRoute>
             } />
 
+            <Route path="/status" element={
+              <ProtectedRoute>
+                <ServiceStatusPage />
+              </ProtectedRoute>
+            } />
+
             {/* Ruta de redirección para rutas no encontradas */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -99,9 +135,13 @@ const AppContent = () => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <GlobalErrorProvider>
+        <AuthProvider>
+          <ServiceStatusProvider>
+            <AppContent />
+          </ServiceStatusProvider>
+        </AuthProvider>
+      </GlobalErrorProvider>
     </Router>
   );
 }

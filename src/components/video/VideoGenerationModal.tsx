@@ -1,28 +1,36 @@
 import React, { useState } from 'react';
-import { Video, Users, Globe2, Zap, Palette, Eye, Volume2, Clock, Settings, Sparkles, FileVideo, Lightbulb, DollarSign, Monitor, Layout } from 'lucide-react';
-import { API_CONFIG } from '../../config/api';
+import { Video, Users, Globe2, Zap, Palette, Eye, Volume2, Clock, Settings, Sparkles, FileVideo, Lightbulb, DollarSign, Monitor, Layout, AlertTriangle, RefreshCw } from 'lucide-react';
+import { videoGenerationApi } from '../../utils/apiWrapper';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { useServiceStatus } from '../../contexts/ServiceStatusContext';
+import { useGlobalError } from '../../contexts/GlobalErrorContext';
 
 type VideoGenerationModalProps = {
   onClose?: () => void;
 };
 
 const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) => {
-  const [characters, setCharacters] = useState('');
-  const [world, setWorld] = useState('');
-  const [action, setAction] = useState('');
-  const [visualStyle, setVisualStyle] = useState('');
-  const [sensoryElements, setSensoryElements] = useState('');
-  const [audioDescription, setAudioDescription] = useState('');
-  const [duration, setDuration] = useState('5');
-  const [selectedFormat, setSelectedFormat] = useState('horizontal');
-  const [selectedResolution, setSelectedResolution] = useState('1080p');
-  const [selectedPlatform, setSelectedPlatform] = useState('youtube');
-  const [selectedModel, setSelectedModel] = useState('veo3');
-  const [frameRate, setFrameRate] = useState('24');
-  const [cameraMovement, setCameraMovement] = useState('estatico');
-  const [quality, setQuality] = useState('alta');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
+   const [characters, setCharacters] = useState('');
+   const [world, setWorld] = useState('');
+   const [action, setAction] = useState('');
+   const [visualStyle, setVisualStyle] = useState('');
+   const [sensoryElements, setSensoryElements] = useState('');
+   const [audioDescription, setAudioDescription] = useState('');
+   const [duration, setDuration] = useState('5');
+   const [selectedFormat, setSelectedFormat] = useState('horizontal');
+   const [selectedResolution, setSelectedResolution] = useState('1080p');
+   const [selectedPlatform, setSelectedPlatform] = useState('youtube');
+   const [selectedModel, setSelectedModel] = useState('veo3');
+   const [frameRate, setFrameRate] = useState('24');
+   const [cameraMovement, setCameraMovement] = useState('estatico');
+   const [quality, setQuality] = useState('alta');
+   const [isGenerating, setIsGenerating] = useState(false);
+   const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
+   const [fallbackMode, setFallbackMode] = useState(false);
+
+   const { error, handleError, clearError, retryOperation } = useErrorHandler('video-generation');
+   const { serviceStatus } = useServiceStatus();
+   const { showError } = useGlobalError();
 
   const formatos = [
     { id: 'horizontal', nombre: 'Horizontal (16:9)', resolucion: '1920x1080', uso: 'YouTube, web, presentaciones' },
@@ -126,49 +134,41 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) 
 
     console.log('Enviando datos al webhook de video:', formData);
     setIsGenerating(true);
+    clearError();
 
     try {
-      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.VIDEO_GENERATION), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      await retryOperation(async () => {
+        const response = await videoGenerationApi({
+          method: 'POST',
+          body: JSON.stringify(formData),
+        });
 
-      console.log('Respuesta del webhook de video:', response.status, response.statusText);
-
-      if (response.ok) {
-        try {
-          const result = await response.json();
-          console.log('Video generado exitosamente:', result);
+        if (response.success) {
+          console.log('Video generado exitosamente:', response);
 
           // Extraer el mensaje del bot_response
-          const message = result.data?.bot_response;
+          const message = response.data?.data?.bot_response || response.data;
           if (message) {
-            setGeneratedMessage(message);
+            setGeneratedMessage(typeof message === 'string' ? message : JSON.stringify(message));
+            setFallbackMode(false);
           } else {
-            alert('Video generado, pero no se pudo obtener el mensaje. Revisa la consola para más detalles.');
+            throw new Error('Video generado, pero no se pudo obtener el mensaje.');
           }
-        } catch (jsonError) {
-          console.error('Error al parsear JSON:', jsonError);
-          // Si no es JSON válido, intentar obtener como texto plano
-          const textResponse = await response.text();
-          console.log('Respuesta como texto:', textResponse);
-          if (textResponse) {
-            setGeneratedMessage(textResponse);
-          } else {
-            alert('Video generado, pero la respuesta no es válida. Revisa la consola para más detalles.');
-          }
+        } else {
+          throw new Error(response.error || 'Error desconocido en la generación de video');
         }
-      } else {
-        const errorText = await response.text();
-        console.error('Error al generar el video:', response.statusText, errorText);
-        alert(`Error al generar el video: ${response.statusText}`);
-      }
+      });
     } catch (error) {
-      console.error('Error en la solicitud:', error);
-      alert(`Error en la solicitud: ${error}`);
+      handleError(error);
+
+      // Always show global error notification
+      showError();
+
+      // Check if we should offer fallback
+      const videoStatus = serviceStatus['video-generation'];
+      if (videoStatus?.status === 'down' && !fallbackMode) {
+        setFallbackMode(true);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -493,6 +493,40 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ onClose }) 
               </h4>
               <div className="text-sm text-green-700 bg-white p-3 rounded border max-h-40 overflow-y-auto">
                 {generatedMessage}
+              </div>
+            </div>
+          )}
+
+          {fallbackMode && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="font-medium text-yellow-800 mb-2 flex items-center">
+                <AlertTriangle className="w-4 h-4 mr-1" />
+                Servicio alternativo disponible
+              </h4>
+              <p className="text-sm text-yellow-700 mb-3">
+                El servicio principal no está disponible. Puedes intentar con una alternativa:
+              </p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setSelectedModel('synthesia-video-generation');
+                    setFallbackMode(false);
+                    clearError();
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Usar Synthesia (solo vídeo)
+                </button>
+                <button
+                  onClick={() => {
+                    // Logic to generate text-only version
+                    setFallbackMode(false);
+                    clearError();
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Generar solo descripción de texto
+                </button>
               </div>
             </div>
           )}

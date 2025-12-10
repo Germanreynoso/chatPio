@@ -1,0 +1,340 @@
+{
+  "Fundación UD": [
+    {
+      "titulo": "📢 Anuncio de evento deportivo",
+      "tema": "Partido benéfico Estadio Gran Canaria",
+      "mensaje": "La Fundación organiza partido benéfico para familias necesitadas. Todos los fondos recaudados irán destinados a programas sociales.",
+      "contexto": "Sábado 14:00h, entrada 5€, familias necesitadas, colaboración con entidades locales",
+      "audiencia": "Comunidad local"
+    },
+    {
+      "titulo": "🎉 Lanzamiento programa social",
+      "tema": "Nuevo programa integración mayores",
+      "mensaje": "Lanzamos programa de integración para personas mayores con actividades deportivas adaptadas y talleres de socialización.",
+      "contexto": "Inicio octubre, sesiones semanales, colaboración con centros de mayores, actividades gratuitas",
+      "audiencia": "Personas mayores"
+    },
+    {
+      "titulo": "🤝 Acuerdo institucional",
+      "tema": "Convenio con Ayuntamiento Las Palmas",
+      "mensaje": "Firmamos convenio con Ayuntamiento para desarrollar programas deportivos en barrios vulnerables.",
+      "contexto": "3 años duración, 50.000€ inversión, 5 barrios participantes, inicio inmediato",
+      "audiencia": "Instituciones locales"
+    }
+  ],
+  "Cantera": [
+    {
+      "titulo": "🏆 Resultados juveniles",
+      "tema": "Victoria equipo cadete en torneo regional",
+      "mensaje": "Nuestro equipo cadete se proclamó campeón del torneo regional tras una temporada excepcional.",
+      "contexto": "Final disputada ayer, 3-1 resultado final, 15 jugadores destacados, próximo torneo nacional",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "🎓 Graduación futbolistas",
+      "tema": "Tres juveniles pasan al primer equipo",
+      "mensaje": "Tres futbolistas de la cantera han sido ascendidos al primer equipo tras demostrar un rendimiento excepcional.",
+      "contexto": "Pedro García, Miguel Rodríguez, Carlos Sánchez, entrenamientos intensivos, debut inminente",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "📚 Programa educativo",
+      "tema": "Nuevo programa formación académica",
+      "mensaje": "Implementamos programa de formación académica para futbolistas con clases de apoyo escolar.",
+      "contexto": "Colaboración con universidades, tutores especializados, horario flexible, resultados académicos mejorados",
+      "audiencia": "Familias de futbolistas"
+    }
+  ],
+  "Hospitality": [
+    {
+      "titulo": "🍽️ Nuevo menú VIP",
+      "tema": "Lanzamiento experiencia gastronómica premium",
+      "mensaje": "Presentamos nueva experiencia gastronómica VIP con menú exclusivo creado por chef estrella Michelin.",
+      "contexto": "Chef internacional, ingredientes premium, maridaje vinos selectos, precio 150€ por persona",
+      "audiencia": "Patrocinadores"
+    },
+    {
+      "titulo": "🏨 Suite presidencial",
+      "tema": "Renovación suite presidencial",
+      "mensaje": "Hemos renovado completamente la suite presidencial con las últimas tendencias en lujo y confort.",
+      "contexto": "200m² superficie, jacuzzi privado, terraza panorámica, sistema domótico, precio desde 800€/noche",
+      "audiencia": "Clientes premium"
+    },
+    {
+      "titulo": "🎊 Evento corporativo",
+      "tema": "Servicio catering empresa tecnológica",
+      "mensaje": "Organizamos evento corporativo para empresa tecnológica con servicio de catering personalizado.",
+      "contexto": "200 asistentes, menú mediterráneo, zona chill-out, música ambiente, duración 4 horas",
+      "audiencia": "Empresas"
+    }
+  ],
+  "Internacional": [
+    {
+      "titulo": "🤝 Acuerdo deportivo",
+      "tema": "Convenio con Santos FC Brasil",
+      "mensaje": "Firmamos acuerdo de colaboración con Santos FC para intercambio de jugadores y conocimientos técnicos.",
+      "contexto": "Programa juvenil conjunto, entrenadores visitantes, partidos amistosos, duración 3 años",
+      "audiencia": "Aficionados internacionales"
+    },
+    {
+      "titulo": "🌍 Expansión internacional",
+      "tema": "Nueva academia en México",
+      "mensaje": "Abrimos nueva academia de formación en México para expandir nuestra metodología internacionalmente.",
+      "contexto": "Ciudad de México, 50 niños iniciales, entrenadores españoles, instalaciones modernas",
+      "audiencia": "Comunidad mexicana"
+    },
+    {
+      "titulo": "🏟️ Proyecto estadio",
+      "tema": "Nuevo complejo deportivo internacional",
+      "mensaje": "Presentamos proyecto de complejo deportivo internacional con estándares UEFA en Latinoamérica.",
+      "contexto": "Inversión 20M€, capacidad 15.000 espectadores, centro comercial anexo, inauguración 2025",
+      "audiencia": "Instituciones deportivas"
+    }
+  ],
+  "Marketing": [
+    {
+      "titulo": "📺 Campaña televisiva",
+      "tema": "Nueva campaña 'Orgullo Amarillo'",
+      "mensaje": "Lanzamos campaña televisiva 'Orgullo Amarillo' para conectar emocionalmente con nuestros aficionados.",
+      "contexto": "30 segundos spot, emisión prime time, mensaje valores club, producción audiovisual premium",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "📱 App móvil renovada",
+      "tema": "Nueva versión aplicación móvil",
+      "mensaje": "Presentamos nueva versión de nuestra app móvil con funcionalidades avanzadas y mejor experiencia de usuario.",
+      "contexto": "Compra entradas, contenido exclusivo, realidad aumentada, estadísticas en tiempo real",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "🎨 Nuevo merchandising",
+      "tema": "Colección limitada aniversario",
+      "mensaje": "Lanzamos colección limitada de merchandising para celebrar nuestro 50 aniversario como club.",
+      "contexto": "Camisetas retro, bufandas edición especial, productos coleccionables, venta online exclusiva",
+      "audiencia": "Aficionados del club"
+    }
+  ],
+  "Abonados": [
+    {
+      "titulo": "🎫 Nuevo sistema abonos",
+      "tema": "Renovación sistema de abonados digitales",
+      "mensaje": "Implementamos nuevo sistema digital de abonados con beneficios exclusivos y facilidades de pago.",
+      "contexto": "App dedicada, pago fraccionado, descuentos familiares, acceso prioritario, renovación automática",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "👨‍👩‍👧‍👦 Día de la familia",
+      "tema": "Jornada especial familias abonados",
+      "mensaje": "Organizamos jornada especial para familias de abonados con actividades recreativas y encuentros con jugadores.",
+      "contexto": "Domingo familiar, actividades infantiles, autógrafos jugadores, comida compartida, entrada gratuita",
+      "audiencia": "Familias de abonados"
+    },
+    {
+      "titulo": "🎁 Programa fidelización",
+      "tema": "Nuevos beneficios programa abonados",
+      "mensaje": "Ampliamos programa de fidelización con nuevos beneficios exclusivos para nuestros abonados más leales.",
+      "contexto": "Descuentos tienda, entradas partidos amistosos, experiencias VIP, puntos canjeables",
+      "audiencia": "Aficionados del club"
+    }
+  ],
+  "Creative": [
+    {
+      "titulo": "🎬 Contenido digital",
+      "tema": "Serie documental 'Detrás de las cámaras'",
+      "mensaje": "Estrenamos serie documental que muestra el día a día del club desde perspectivas únicas.",
+      "contexto": "6 episodios, producción profesional, testimonios jugadores, entrenadores y staff, plataformas streaming",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "📸 Campaña fotográfica",
+      "tema": "Nueva campaña imagen corporativa",
+      "mensaje": "Presentamos nueva campaña fotográfica que refleja la evolución y modernización del club.",
+      "contexto": "Fotógrafo internacional, locaciones emblemáticas, mensaje transformación, uso multiplataforma",
+      "audiencia": "Público general"
+    },
+    {
+      "titulo": "🎨 Identidad visual",
+      "tema": "Rediseño logotipo institucional",
+      "mensaje": "Revelamos nuevo logotipo institucional que mantiene nuestra esencia pero con un diseño más moderno.",
+      "contexto": "Proceso colaborativo, investigación usuarios, aplicación completa, lanzamiento progresivo",
+      "audiencia": "Comunidad UD"
+    }
+  ],
+  "Escuela": [
+    {
+      "titulo": "📚 Programa educativo",
+      "tema": "Nuevo currículo formación integral",
+      "mensaje": "Implementamos nuevo currículo que combina formación deportiva con educación académica de calidad.",
+      "contexto": "Colaboración universidades, profesores especializados, horario intensivo, evaluación continua",
+      "audiencia": "Familias interesadas"
+    },
+    {
+      "titulo": "🏃‍♂️ Campus deportivo",
+      "tema": "Ampliación instalaciones escuela",
+      "mensaje": "Ampliamos nuestras instalaciones con nuevo campus deportivo para mejorar la formación de nuestros alumnos.",
+      "contexto": "5 campos nuevos, gimnasio moderno, residencias estudiantes, inversión 2M€",
+      "audiencia": "Comunidad deportiva"
+    },
+    {
+      "titulo": "🎓 Graduación alumnos",
+      "tema": "Ceremonia graduación promoción 2024",
+      "mensaje": "Celebramos graduación de la promoción 2024 con emotiva ceremonia y reconocimientos especiales.",
+      "contexto": "50 alumnos graduados, 15 becas universitarias, discursos motivacionales, fiesta posterior",
+      "audiencia": "Familias y comunidad"
+    }
+  ],
+  "eSports": [
+    {
+      "titulo": "🎮 Torneo competitivo",
+      "tema": "UD eSports clasifica Champions League",
+      "mensaje": "Nuestro equipo de eSports se clasificó para la Champions League tras una temporada excepcional.",
+      "contexto": "Juego FIFA, clasificación directa, premio económico, cobertura internacional",
+      "audiencia": "Comunidad gaming"
+    },
+    {
+      "titulo": "💻 Academia gaming",
+      "tema": "Nueva academia formación eSports",
+      "mensaje": "Abrimos academia especializada en formación de jugadores profesionales de eSports.",
+      "contexto": "Equipos gaming, entrenadores profesionales, psicólogos deportivos, becas completas",
+      "audiencia": "Jóvenes gamers"
+    },
+    {
+      "titulo": "🎯 Patrocinio tecnológico",
+      "tema": "Acuerdo con empresa tecnológica",
+      "mensaje": "Firmamos acuerdo de patrocinio con empresa tecnológica líder para equipamiento de última generación.",
+      "contexto": "Equipos gaming premium, realidad virtual, streaming profesional, duración 2 años",
+      "audiencia": "Comunidad eSports"
+    }
+  ],
+  "Infraestructuras": [
+    {
+      "titulo": "🏗️ Proyecto estadio",
+      "tema": "Ampliación capacidad estadio",
+      "mensaje": "Presentamos proyecto de ampliación del estadio para aumentar capacidad y mejorar comodidades.",
+      "contexto": "Nuevo graderío, mejora accesibilidad, zona VIP ampliada, inversión 15M€, finalización 2026",
+      "audiencia": "Aficionados del club"
+    },
+    {
+      "titulo": "🌱 Sostenibilidad",
+      "tema": "Proyecto estadio sostenible",
+      "mensaje": "Implementamos medidas de sostenibilidad en el estadio con paneles solares y sistemas de reciclaje.",
+      "contexto": "Reducción 40% consumo energético, certificación LEED, zona verde ampliada, educación ambiental",
+      "audiencia": "Comunidad local"
+    },
+    {
+      "titulo": "🚇 Accesibilidad",
+      "tema": "Mejora accesos estadio",
+      "mensaje": "Mejoramos todos los accesos al estadio con nuevas infraestructuras y sistemas de transporte.",
+      "contexto": "Nueva estación metro, aparcamientos ampliados, carriles bici, accesos peatonales mejorados",
+      "audiencia": "Aficionados del club"
+    }
+  ],
+  "formatos": {
+    "Video": [
+      {
+        "titulo": "🎬 Vídeo institucional corporativo",
+        "personajes": "Ejecutivo joven trabajando en laptop moderna, movimientos naturales al escribir, expresión concentrada y profesional",
+        "escenario": "Oficina moderna con luz natural que cambia sutilmente, ambiente dinámico con elementos tecnológicos",
+        "accion": "Secuencia de planos: medio → primer plano manos → zoom out mostrando pantalla con gráficos corporativos",
+        "estiloVisual": "Estilo cinematográfico corporativo, paleta de colores fría con acentos amarillos, iluminación suave y profesional",
+        "elementosSensoriales": "Atmósfera de productividad e innovación, sensaciones de eficiencia y tecnología avanzada",
+        "audio": "Sonido ambiente sutil de oficina, música instrumental corporativa moderna, efectos discretos de teclado",
+        "duracion": "15",
+        "formato": "horizontal",
+        "resolucion": "1080p",
+        "modelo": "veo3",
+        "fps": "24",
+        "movimientoCamara": "estatico",
+        "calidad": "alta"
+      },
+      {
+        "titulo": "🎥 Vídeo promocional evento",
+        "personajes": "Grupo diverso de aficionados celebrando, expresiones de alegría y entusiasmo compartido",
+        "escenario": "Estadio iluminado por la noche con efectos de luz dramáticos, gradas parcialmente llenas",
+        "accion": "Movimiento dinámico: travelling lateral mostrando aficionados → close-up de expresiones → slow motion celebración",
+        "estiloVisual": "Estilo dinámico y energético, paleta cálida con amarillo predominante, iluminación nocturna espectacular",
+        "elementosSensoriales": "Atmósfera de celebración y pasión, sensaciones de unidad y emoción colectiva",
+        "audio": "Música épica creciente, cánticos de aficionados, efectos de ambiente estadio",
+        "duracion": "30",
+        "formato": "horizontal",
+        "resolucion": "1080p",
+        "modelo": "runway",
+        "fps": "30",
+        "movimientoCamara": "pan_derecha",
+        "calidad": "alta"
+      }
+    ],
+    "Video con avatar": [
+      {
+        "titulo": "🎭 Presentador virtual informativo",
+        "descripcion": "Avatar profesional presentando información corporativa con gestos naturales y expresiones amigables",
+        "estiloAvatar": "Profesional corporativo, traje formal, gestos elegantes, expresión confiada",
+        "contenido": "Presentación de resultados trimestrales del club con datos positivos y proyecciones futuras",
+        "duracion": "60",
+        "idioma": "Español",
+        "tonoVoz": "Profesional y entusiasta",
+        "fondo": "Oficina moderna con logo del club",
+        "musica": "Instrumental corporativo suave"
+      },
+      {
+        "titulo": "🎪 Animador virtual eventos",
+        "descripcion": "Avatar carismático animando evento virtual con energía y cercanía",
+        "estiloAvatar": "Casual deportivo, sonrisa amplia, gestos expresivos, energía contagiosa",
+        "contenido": "Bienvenida a aficionados conectados, anuncio de sorpresas y promoción de interacción",
+        "duracion": "30",
+        "idioma": "Español",
+        "tonoVoz": "Enérgico y cercano",
+        "fondo": "Estadio virtual con efectos dinámicos",
+        "musica": "Música animada y moderna"
+      }
+    ],
+    "Audio/podcast": [
+      {
+        "titulo": "🎙️ Entrevista técnica táctica",
+        "tituloPodcast": "UD Análisis Táctico",
+        "descripcion": "Análisis detallado de la táctica utilizada en el último partido con explicaciones técnicas",
+        "duracion": "25",
+        "idioma": "Español",
+        "estiloNarracion": "Profesional y didáctico",
+        "musicaIntro": "Instrumental motivacional",
+        "musicaOutro": "Tema oficial del club",
+        "efectosSonido": "Transiciones suaves, efectos de estadio",
+        "estructura": "Introducción → Análisis táctico → Conclusiones → Cierre"
+      },
+      {
+        "titulo": "🎧 Historia del club",
+        "tituloPodcast": "Leyendas UD",
+        "descripcion": "Narración apasionante de momentos históricos del club con anécdotas y testimonios",
+        "duracion": "20",
+        "idioma": "Español",
+        "estiloNarracion": "Apasionado y narrativo",
+        "musicaIntro": "Tema épico",
+        "musicaOutro": "Himno del club",
+        "efectosSonido": "Efectos de estadio, aplausos",
+        "estructura": "Introducción histórica → Desarrollo → Clímax → Desenlace emotivo"
+      }
+    ],
+    "Imagen": [
+      {
+        "titulo": "🏟️ Imagen estadio corporativa",
+        "estilo": "Fotografía profesional corporativa",
+        "sujeto": "Estadio Gran Canaria vacío al atardecer con luz dorada",
+        "composicion": "Enfoque en arquitectura moderna, líneas geométricas, simetría perfecta",
+        "iluminacion": "Luz natural del atardecer, sombras largas, tonos cálidos",
+        "colores": "Paleta corporativa amarillo y azul, contraste dramático",
+        "detalles": "Logo del club visible, césped impecable, arquitectura moderna",
+        "mood": "Profesional, moderno, aspiracional"
+      },
+      {
+        "titulo": "⚽ Acción deportiva dinámica",
+        "estilo": "Fotografía deportiva de acción",
+        "sujeto": "Jugador profesional ejecutando tiro potente en pleno partido",
+        "composicion": "Regla de tercios, movimiento diagonal, anticipación de trayectoria",
+        "iluminacion": "Luz natural de estadio, sombras dinámicas",
+        "colores": "Colores vibrantes del uniforme, contraste con césped verde",
+        "detalles": "Expresión de concentración, balón en movimiento, fondo de aficionados",
+        "mood": "Dinámico, poderoso, apasionado"
+      }
+    ]
+  }
+}
