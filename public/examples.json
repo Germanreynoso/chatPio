@@ -229,6 +229,54 @@
       "audiencia": "Aficionados del club"
     }
   ],
+  "Twitter/X": [
+    {
+      "titulo": "📢 Nota de prensa - X (Twitter)",
+      "tema": "Nuevo acuerdo de patrocinio",
+      "mensaje": "La UD Las Palmas firma acuerdo histórico con empresa tecnológica para digitalizar el estadio. #UDLP #Innovacion",
+      "contexto": "Acuerdo 3 años, inversión 2M€, implementación IA para aficionados, lanzamiento inmediato",
+      "audiencia": "Aficionados y seguidores en redes"
+    }
+  ],
+  "Instagram": [
+    {
+      "titulo": "📢 Nota de prensa - Instagram",
+      "tema": "Colaboración innovadora",
+      "mensaje": "✨ ¡Nueva era digital en la UD Las Palmas! Firmamos acuerdo con tech leader para revolucionar la experiencia de nuestros aficionados. #UDLP #Tecnologia #Futbol",
+      "contexto": "Apps móviles, realidad aumentada, contenido exclusivo, comunidad digital ampliada",
+      "audiencia": "Jóvenes aficionados"
+    }
+  ],
+  "Facebook": [
+    {
+      "titulo": "📢 Nota de prensa - Facebook",
+      "tema": "Avance tecnológico en el deporte",
+      "mensaje": "La UD Las Palmas da un paso adelante en la innovación deportiva con nuevo acuerdo tecnológico. ¡Descubre cómo estamos transformando el fútbol!",
+      "contexto": "Mejora experiencia aficionados, sostenibilidad digital, inclusión tecnológica, futuro del deporte",
+      "audiencia": "Comunidad local y familias"
+    }
+  ],
+  "LinkedIn": [
+    {
+      "titulo": "📢 Nota de prensa - LinkedIn",
+      "tema": "Convenio estratégico corporativo",
+      "mensaje": "Anunciamos alianza estratégica con líder tecnológico para transformación digital del club deportivo. Interesados en contactar: info@udlaspalmas.es",
+      "contexto": "Proyecto innovación, desarrollo sostenible, impacto comunitario, oportunidades profesionales",
+      "audiencia": "Profesionales y empresas"
+    }
+  ],
+  "Imagen": [
+    {
+      "titulo": "🏟️ Imagen estadio corporativa",
+      "estilo": "Fotografía profesional corporativa",
+      "sujeto": "Estadio Gran Canaria vacío al atardecer con luz dorada",
+      "composicion": "Enfoque en arquitectura moderna, líneas geométricas, simetría perfecta",
+      "iluminacion": "Luz natural del atardecer, sombras largas, tonos cálidos",
+      "colores": "Paleta corporativa amarillo y azul, contraste dramático",
+      "detalles": "Logo del club visible, césped impecable, arquitectura moderna",
+      "mood": "Profesional, moderno, aspiracional"
+    }
+  ],
   "formatos": {
     "Video": [
       {
@@ -262,6 +310,22 @@
         "fps": "30",
         "movimientoCamara": "pan_derecha",
         "calidad": "alta"
+      },
+      {
+        "titulo": "🎬 Vídeo promocional producto",
+        "personajes": "Jugador profesional mostrando producto, expresiones de confianza y satisfacción",
+        "escenario": "Campo de entrenamiento moderno con iluminación natural, ambiente profesional",
+        "accion": "Secuencia: presentación producto → demostración uso → beneficios destacados → llamada acción",
+        "estiloVisual": "Estilo comercial dinámico, colores corporativos, iluminación clara y atractiva",
+        "elementosSensoriales": "Sensación de calidad y rendimiento, ambiente motivacional",
+        "audio": "Música upbeat moderna, voz en off entusiasta, efectos de sonido positivos",
+        "duracion": "20",
+        "formato": "horizontal",
+        "resolucion": "1080p",
+        "modelo": "runway",
+        "fps": "30",
+        "movimientoCamara": "pan_izquierda",
+        "calidad": "alta"
       }
     ],
     "Video con avatar": [
@@ -286,6 +350,17 @@
         "tonoVoz": "Enérgico y cercano",
         "fondo": "Estadio virtual con efectos dinámicos",
         "musica": "Música animada y moderna"
+      },
+      {
+        "titulo": "🎭 Avatar entrenador motivacional",
+        "descripcion": "Avatar del entrenador transmitiendo mensaje motivacional antes del partido con autoridad y pasión",
+        "estiloAvatar": "Entrenador experimentado, gesto serio pero motivador, uniforme técnico",
+        "contenido": "Mensaje de unidad y determinación para el próximo encuentro, destacando valores del equipo",
+        "duracion": "45",
+        "idioma": "Español",
+        "tonoVoz": "Motivacional y firme",
+        "fondo": "Vestuario del equipo con banderas del club",
+        "musica": "Himno del club instrumental"
       }
     ],
     "Audio/podcast": [
@@ -312,6 +387,18 @@
         "musicaOutro": "Himno del club",
         "efectosSonido": "Efectos de estadio, aplausos",
         "estructura": "Introducción histórica → Desarrollo → Clímax → Desenlace emotivo"
+      },
+      {
+        "titulo": "🎧 Entrevista jugador estrella",
+        "tituloPodcast": "Voces del Vestuario",
+        "descripcion": "Conversación íntima con el capitán del equipo sobre su carrera, desafíos personales y visión del futuro",
+        "duracion": "35",
+        "idioma": "Español",
+        "estiloNarracion": "Conversacional y personal",
+        "musicaIntro": "Tema épico del club",
+        "musicaOutro": "Instrumental motivacional",
+        "efectosSonido": "Ambiente vestuario, aplausos suaves",
+        "estructura": "Presentación invitado → Preguntas personales → Experiencias deportivas → Mensaje final"
       }
     ],
     "Imagen": [
@@ -334,6 +421,16 @@
         "colores": "Colores vibrantes del uniforme, contraste con césped verde",
         "detalles": "Expresión de concentración, balón en movimiento, fondo de aficionados",
         "mood": "Dinámico, poderoso, apasionado"
+      },
+      {
+        "titulo": "🏟️ Retrato equipo completo",
+        "estilo": "Fotografía de grupo profesional",
+        "sujeto": "Equipo al completo posando en formación piramidal en el campo de juego",
+        "composicion": "Composición triangular clásica, líneas diagonales, simetría en el centro",
+        "iluminacion": "Luz natural del mediodía, sombras suaves, contraste moderado",
+        "colores": "Uniformes amarillos y azules vibrantes, césped verde intenso",
+        "detalles": "Expresiones de unidad y determinación, balón en el centro, estadio de fondo",
+        "mood": "Profesional, unido, victorioso"
       }
     ]
   }

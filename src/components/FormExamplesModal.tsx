@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, X, Eye, Sparkles, MessageSquare, Instagram, Facebook, Twitter, Newspaper, Globe, Youtube, Linkedin } from 'lucide-react';
+import { FileText, X, Eye, Sparkles, MessageSquare, Instagram, Facebook, Twitter, Newspaper, Globe, Youtube, Linkedin, Image, Mic } from 'lucide-react';
 
 interface FormExamplesModalProps {
   onClose: () => void;
@@ -12,6 +12,7 @@ interface PlatformExample {
   description: string;
   exampleData: any;
   color: string;
+  type: 'text' | 'image' | 'audio';
 }
 
 const FormExamplesModal: React.FC<FormExamplesModalProps> = ({ onClose }) => {
@@ -24,20 +25,12 @@ const FormExamplesModal: React.FC<FormExamplesModalProps> = ({ onClose }) => {
       icon: <Newspaper className="w-6 h-6" />,
       description: 'Comunicados oficiales y anuncios corporativos',
       color: 'bg-blue-500',
+      type: 'text',
       exampleData: {
-        characters: 'Ejecutivo corporativo de 45 años, traje ejecutivo azul marino, expresión seria y profesional. Logo de la empresa visible en el fondo.',
-        world: 'Sala de conferencias moderna con mesa ovalada, sillas ejecutivas, proyector de pantalla grande, iluminación profesional, ambiente corporativo.',
-        action: 'El ejecutivo está presentando ante un grupo de periodistas, señalando gráficos en la pantalla, con micrófonos y cámaras de televisión alrededor.',
-        visualStyle: 'Fotografía corporativa profesional, estilo documental, colores corporativos azul y blanco, composición formal y elegante.',
-        sensoryElements: 'Ambiente de seriedad y confianza, iluminación profesional, sensación de autoridad y credibilidad corporativa.',
-        includeText: true,
-        textContent: 'COMUNICADO DE PRENSA - Nuevo Lanzamiento',
-        textPosition: 'superior',
-        selectedFormat: 'horizontal',
-        selectedResolution: '1920x1080',
-        selectedPlatform: 'web',
-        selectedModel: 'imagen4',
-        quality: 'alta'
+        tema: 'Partido benéfico Estadio Gran Canaria',
+        mensaje: 'La Fundación organiza partido benéfico para familias necesitadas. Todos los fondos recaudados irán destinados a programas sociales.',
+        contexto: 'Sábado 14:00h, entrada 5€, familias necesitadas, colaboración con entidades locales',
+        audiencia: 'Comunidad local'
       }
     },
     {
@@ -46,20 +39,12 @@ const FormExamplesModal: React.FC<FormExamplesModalProps> = ({ onClose }) => {
       icon: <Twitter className="w-6 h-6" />,
       description: 'Contenido breve y viral para redes sociales',
       color: 'bg-black',
+      type: 'text',
       exampleData: {
-        characters: 'Persona joven de 25 años, expresión entusiasta y energética, cabello moderno, ropa casual urbana.',
-        world: 'Café moderno con mesas de madera, iluminación cálida, plantas decorativas, ambiente urbano y trendy.',
-        action: 'La persona está tomando una foto con su teléfono móvil, sonriendo a la cámara, con una taza de café en la mesa.',
-        visualStyle: 'Fotografía móvil moderna, estilo instagram, colores vibrantes, composición dinámica y juvenil.',
-        sensoryElements: 'Ambiente de energía y positividad, iluminación cálida, sensación de conexión social y modernidad.',
-        includeText: true,
-        textContent: '¡Nuevo día, nuevas oportunidades! ☕ #Motivacion',
-        textPosition: 'inferior',
-        selectedFormat: 'cuadrado',
-        selectedResolution: '1024x1024',
-        selectedPlatform: 'twitter',
-        selectedModel: 'imagen4',
-        quality: 'alta'
+        tema: 'Nuevo acuerdo de patrocinio',
+        mensaje: 'La UD Las Palmas firma acuerdo histórico con empresa tecnológica para digitalizar el estadio. #UDLP #Innovacion',
+        contexto: 'Acuerdo 3 años, inversión 2M€, implementación IA para aficionados, lanzamiento inmediato',
+        audiencia: 'Aficionados y seguidores en redes'
       }
     },
     {
@@ -68,20 +53,12 @@ const FormExamplesModal: React.FC<FormExamplesModalProps> = ({ onClose }) => {
       icon: <Instagram className="w-6 h-6" />,
       description: 'Contenido visual atractivo para stories y feed',
       color: 'bg-gradient-to-r from-purple-500 to-pink-500',
+      type: 'text',
       exampleData: {
-        characters: 'Mujer joven de 28 años, expresión feliz y relajada, cabello largo ondulado, vestimenta casual elegante.',
-        world: 'Jardín urbano con flores coloridas, bancos de madera, iluminación natural, ambiente tranquilo y estético.',
-        action: 'La mujer está sentada en un banco leyendo un libro, con una bicicleta apoyada al lado, expresión de paz y disfrute.',
-        visualStyle: 'Fotografía de estilo instagram, colores pastel suaves, composición estética, iluminación natural dorada.',
-        sensoryElements: 'Ambiente de calma y bienestar, texturas naturales, sensación de paz y conexión con la naturaleza.',
-        includeText: true,
-        textContent: 'Momentos de paz en la ciudad 🌸',
-        textPosition: 'centro',
-        selectedFormat: 'cuadrado',
-        selectedResolution: '1024x1024',
-        selectedPlatform: 'instagram',
-        selectedModel: 'imagen4',
-        quality: 'alta'
+        tema: 'Colaboración innovadora',
+        mensaje: '✨ ¡Nueva era digital en la UD Las Palmas! Firmamos acuerdo con tech leader para revolucionar la experiencia de nuestros aficionados. #UDLP #Tecnologia #Futbol',
+        contexto: 'Apps móviles, realidad aumentada, contenido exclusivo, comunidad digital ampliada',
+        audiencia: 'Jóvenes aficionados'
       }
     },
     {
@@ -90,20 +67,12 @@ const FormExamplesModal: React.FC<FormExamplesModalProps> = ({ onClose }) => {
       icon: <Facebook className="w-6 h-6" />,
       description: 'Contenido comunitario y familiar',
       color: 'bg-blue-600',
+      type: 'text',
       exampleData: {
-        characters: 'Familia completa: padre, madre e hijos pequeños, expresiones felices y unidas, ropa cómoda familiar.',
-        world: 'Parque familiar con césped verde, árboles frondosos, columpios infantiles, iluminación natural, ambiente acogedor.',
-        action: 'La familia está jugando en el parque, los niños en los columpios, padres sonriendo y fotografiando el momento.',
-        visualStyle: 'Fotografía familiar cálida, colores naturales, composición grupal, iluminación suave y emotiva.',
-        sensoryElements: 'Ambiente de amor y unión familiar, sensación de calidez, alegría y momentos compartidos.',
-        includeText: true,
-        textContent: 'Domingo familiar perfecto! 👨‍👩‍👧‍👦 #Familia #Amor',
-        textPosition: 'inferior',
-        selectedFormat: 'horizontal',
-        selectedResolution: '1920x1080',
-        selectedPlatform: 'web',
-        selectedModel: 'imagen4',
-        quality: 'alta'
+        tema: 'Avance tecnológico en el deporte',
+        mensaje: 'La UD Las Palmas da un paso adelante en la innovación deportiva con nuevo acuerdo tecnológico. ¡Descubre cómo estamos transformando el fútbol!',
+        contexto: 'Mejora experiencia aficionados, sostenibilidad digital, inclusión tecnológica, futuro del deporte',
+        audiencia: 'Comunidad local y familias'
       }
     },
     {
@@ -112,28 +81,46 @@ const FormExamplesModal: React.FC<FormExamplesModalProps> = ({ onClose }) => {
       icon: <Linkedin className="w-6 h-6" />,
       description: 'Contenido profesional y corporativo',
       color: 'bg-blue-700',
+      type: 'text',
       exampleData: {
-        characters: 'Profesional de negocios de 40 años, traje ejecutivo, expresión confiada, portando una laptop.',
-        world: 'Oficina moderna con ventanales amplios, muebles minimalistas, iluminación profesional, ambiente corporativo.',
-        action: 'El profesional está trabajando en su laptop, revisando gráficos en la pantalla, con una taza de café al lado.',
-        visualStyle: 'Fotografía corporativa profesional, colores neutros y corporativos, composición formal y elegante.',
-        sensoryElements: 'Ambiente de productividad y profesionalismo, sensación de confianza y competencia corporativa.',
-        includeText: true,
-        textContent: 'Impulsando la innovación tecnológica 🚀 #Business #Tech',
-        textPosition: 'superior',
-        selectedFormat: 'horizontal',
-        selectedResolution: '1920x1080',
-        selectedPlatform: 'linkedin',
-        selectedModel: 'imagen4',
-        quality: 'alta'
+        tema: 'Convenio estratégico corporativo',
+        mensaje: 'Anunciamos alianza estratégica con líder tecnológico para transformación digital del club deportivo. Interesados en contactar: info@udlaspalmas.es',
+        contexto: 'Proyecto innovación, desarrollo sostenible, impacto comunitario, oportunidades profesionales',
+        audiencia: 'Profesionales y empresas'
       }
     },
     {
-      id: 'youtube',
-      name: 'YouTube',
-      icon: <Youtube className="w-6 h-6" />,
-      description: 'Miniaturas atractivas para videos',
-      color: 'bg-red-600',
+      id: 'audio-podcast',
+      name: 'Audio/podcast',
+      icon: <Mic className="w-6 h-6" />,
+      description: 'Contenido de audio conversacional',
+      color: 'bg-green-600',
+      type: 'audio',
+      exampleData: {
+        formatoAudio: 'Monólogo',
+        participantes: 'Pedro (Narrador)',
+        duracion: '5',
+        idioma: 'Español',
+        musicaFondo: 'Sin música',
+        temaPrincipal: 'Las tendencias de inteligencia artificial en las empresas canarias durante 2025, sus aplicaciones prácticas y el impacto en la transformación digital del sector',
+        estructuraGuion: '1) Introducción y contexto (2 min), 2) Análisis de casos reales en Canarias (5 min), 3) Entrevista con experto local (8 min), 4) Conclusiones y call to action (2 min), 5) Despedida',
+        puntosClave: '- Estadísticas de adopción de IA en Canarias, - Casos de éxito de MMI Analytics, - Beneficios de la automatización, - Retos comunes y soluciones, - Futuro del sector tecnológico en las islas',
+        audienciaObjetivo: 'Directivos de empresas canarias, emprendedores tecnológicos',
+        callToAction: 'Visita mmi-e.com para más información',
+        estiloPodcast: 'Profesional - Corporativo y formal',
+        tonoConversacion: 'Conversacional - Natural y cercano',
+        modeloIA: 'ElevenLabs',
+        calidadAudio: 'Alta (44kHz)',
+        opcionesAdicionales: 'Incluir introducción, Incluir despedida'
+      }
+    },
+    {
+      id: 'imagen',
+      name: 'Imagen',
+      icon: <Image className="w-6 h-6" />,
+      description: 'Generación de imágenes personalizadas',
+      color: 'bg-purple-600',
+      type: 'image',
       exampleData: {
         characters: 'Creador de contenido joven, expresión energética y entusiasta, con auriculares y micrófono.',
         world: 'Estudio de grabación casero con luces RGB, computadora gaming, fondo verde para chroma key.',
@@ -232,8 +219,31 @@ const ExamplePreviewModal: React.FC<ExamplePreviewModalProps> = ({ platform, onC
   const [currentField, setCurrentField] = useState(0);
   const [filledFields, setFilledFields] = useState<Set<number>>(new Set());
   const [isAnimating, setIsAnimating] = useState(false);
+  const [typingTexts, setTypingTexts] = useState<{ [key: string]: string }>({});
+  const intervalsRef = React.useRef<{ [key: string]: number }>({});
 
-  const fields = [
+  const fields = platform.type === 'text' ? [
+    { key: 'tema', label: 'Tema o asunto principal', icon: '📝' },
+    { key: 'mensaje', label: 'Mensaje clave que quiere transmitir', icon: '💬' },
+    { key: 'contexto', label: 'Contexto o detalles adicionales', icon: '📋' },
+    { key: 'audiencia', label: 'Audiencia objetivo', icon: '👥' }
+  ] : platform.type === 'audio' ? [
+    { key: 'formatoAudio', label: 'Formato del audio', icon: '🎙️' },
+    { key: 'participantes', label: 'Configuración de participantes', icon: '👥' },
+    { key: 'duracion', label: 'Duración (minutos)', icon: '⏱️' },
+    { key: 'idioma', label: 'Idioma', icon: '🌍' },
+    { key: 'musicaFondo', label: 'Música de fondo', icon: '🎵' },
+    { key: 'temaPrincipal', label: 'Tema principal', icon: '📝' },
+    { key: 'estructuraGuion', label: 'Estructura del guión', icon: '📋' },
+    { key: 'puntosClave', label: 'Puntos clave a cubrir', icon: '✅' },
+    { key: 'audienciaObjetivo', label: 'Audiencia objetivo', icon: '👥' },
+    { key: 'callToAction', label: 'Call to action', icon: '📢' },
+    { key: 'estiloPodcast', label: 'Estilo del podcast', icon: '🎭' },
+    { key: 'tonoConversacion', label: 'Tono de la conversación', icon: '🗣️' },
+    { key: 'modeloIA', label: 'Modelo de IA', icon: '🤖' },
+    { key: 'calidadAudio', label: 'Calidad de audio', icon: '🔊' },
+    { key: 'opcionesAdicionales', label: 'Opciones adicionales', icon: '⚙️' }
+  ] : [
     { key: 'characters', label: 'Personajes/Sujetos', icon: '👥' },
     { key: 'world', label: 'Escenario/Mundo', icon: '🌍' },
     { key: 'action', label: 'Acción/Composición', icon: '⚡' },
@@ -243,30 +253,55 @@ const ExamplePreviewModal: React.FC<ExamplePreviewModalProps> = ({ platform, onC
   ];
 
   const startAnimation = () => {
+    // Clear previous intervals
+    Object.values(intervalsRef.current).forEach(clearInterval);
+    intervalsRef.current = {};
+
     setIsAnimating(true);
     setFilledFields(new Set());
     setCurrentField(0);
+    setTypingTexts({});
 
-    fields.forEach((_, index) => {
-      setTimeout(() => {
-        setFilledFields(prev => new Set([...prev, index]));
-        setCurrentField(index + 1);
-      }, index * 1500);
-    });
-
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, fields.length * 1500);
+    // Start with the first field
+    startTypingForIndex(0);
   };
 
   React.useEffect(() => {
     // Auto-start animation when modal opens
     const timer = setTimeout(startAnimation, 500);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      Object.values(intervalsRef.current).forEach(clearInterval);
+    };
   }, []);
 
   const getFieldValue = (fieldKey: string) => {
     return platform.exampleData[fieldKey] || '';
+  };
+
+  const typeText = (fieldKey: string, fullText: string, onComplete?: () => void) => {
+    let index = 0;
+    const interval = setInterval(() => {
+      setTypingTexts(prev => ({ ...prev, [fieldKey]: fullText.slice(0, index + 1) }));
+      index++;
+      if (index >= fullText.length) {
+        clearInterval(interval);
+        delete intervalsRef.current[fieldKey];
+        onComplete?.();
+      }
+    }, 30); // 30ms per character for faster typing
+    intervalsRef.current[fieldKey] = interval;
+  };
+
+  const startTypingForIndex = (index: number) => {
+    if (index >= fields.length) {
+      setIsAnimating(false);
+      return;
+    }
+    setFilledFields(prev => new Set([...prev, index]));
+    const field = fields[index];
+    const fullText = getFieldValue(field.key);
+    typeText(field.key, fullText, () => startTypingForIndex(index + 1));
   };
 
   return (
@@ -327,10 +362,10 @@ const ExamplePreviewModal: React.FC<ExamplePreviewModalProps> = ({ platform, onC
                   )}
                 </div>
 
-                {field.key === 'textContent' ? (
+                {(platform.type === 'image' && field.key === 'textContent') ? (
                   <input
                     type="text"
-                    value={filledFields.has(index) ? getFieldValue(field.key) : ''}
+                    value={filledFields.has(index) ? (typingTexts[field.key] || getFieldValue(field.key)) : ''}
                     readOnly
                     className={`w-full p-3 border rounded-md transition-all duration-1000 ${
                       filledFields.has(index)
@@ -341,7 +376,7 @@ const ExamplePreviewModal: React.FC<ExamplePreviewModalProps> = ({ platform, onC
                   />
                 ) : (
                   <textarea
-                    value={filledFields.has(index) ? getFieldValue(field.key) : ''}
+                    value={filledFields.has(index) ? (typingTexts[field.key] || getFieldValue(field.key)) : ''}
                     readOnly
                     rows={3}
                     className={`w-full p-3 border rounded-md transition-all duration-1000 resize-none ${
@@ -363,27 +398,29 @@ const ExamplePreviewModal: React.FC<ExamplePreviewModalProps> = ({ platform, onC
             ))}
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">💡 Configuración Técnica Sugerida:</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Formato:</span>
-                <p className="text-blue-700">{platform.exampleData.selectedFormat}</p>
-              </div>
-              <div>
-                <span className="font-medium">Plataforma:</span>
-                <p className="text-blue-700">{platform.exampleData.selectedPlatform}</p>
-              </div>
-              <div>
-                <span className="font-medium">Modelo:</span>
-                <p className="text-blue-700">{platform.exampleData.selectedModel}</p>
-              </div>
-              <div>
-                <span className="font-medium">Calidad:</span>
-                <p className="text-blue-700">{platform.exampleData.quality}</p>
+          {platform.type === 'image' && (
+            <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">💡 Configuración Técnica Sugerida:</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Formato:</span>
+                  <p className="text-blue-700">{platform.exampleData.selectedFormat}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Plataforma:</span>
+                  <p className="text-blue-700">{platform.exampleData.selectedPlatform}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Modelo:</span>
+                  <p className="text-blue-700">{platform.exampleData.selectedModel}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Calidad:</span>
+                  <p className="text-blue-700">{platform.exampleData.quality}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="mt-6 flex justify-end">
             <button

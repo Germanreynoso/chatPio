@@ -1,11 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Loader2, Play, Pause, Lightbulb } from 'lucide-react';
+import { MessageSquare, Loader2, Play, Pause, Lightbulb, History } from 'lucide-react';
 import { API_CONFIG } from './config/api';
 import ImageGenerationModal from './components/image-generator/ImageGenerationModal';
 import AudioPodcastModal from './components/audio/AudioPodcastModal';
 import VideoAvatarModal from './components/video/VideoAvatarModal';
 import VideoGenerationModal from './components/video/VideoGenerationModal';
 import ExamplesModal from './components/ExamplesModal';
+import FormExamplesModal from './components/FormExamplesModal';
+import VersionHistoryModal from './components/VersionHistoryModal';
+import ContentDetailsModal from './components/ContentDetailsModal';
+import { versionHistoryService } from './services/versionHistoryService';
+import type { VersionContent } from './types/versionHistory';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
 // Si estás usando una librería de Supabase en tu entorno, esta línea debería funcionar.
@@ -49,10 +54,12 @@ type GeneratedContentType = {
 };
 
 type RecentContentType = {
+  id: string;
   area: string;
   format: string;
   topic: string;
   time: string;
+  contentId?: string;
 };
 
 const UDLPChatInterface = () => {
@@ -70,10 +77,10 @@ const UDLPChatInterface = () => {
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['Español']);
   const [recentContents, setRecentContents] = useState<RecentContentType[]>([
-    { area: 'Fundación UD', format: 'instagram', topic: 'Visita hospital infantil', time: '2h' },
-    { area: 'Hospitality', format: 'nota de prensa', topic: 'Nuevo menú VIP', time: '5h' },
-    { area: 'Cantera', format: 'video', topic: 'Entrenamiento juvenil', time: '1d' },
-    { area: 'Internacional', format: 'tweeter', topic: 'Acuerdo con Santos FC', time: '2d' }
+    { id: '1', area: 'Fundación UD', format: 'instagram', topic: 'Visita hospital infantil', time: '2h' },
+    { id: '2', area: 'Hospitality', format: 'nota de prensa', topic: 'Nuevo menú VIP', time: '5h' },
+    { id: '3', area: 'Cantera', format: 'video', topic: 'Entrenamiento juvenil', time: '1d' },
+    { id: '4', area: 'Internacional', format: 'tweeter', topic: 'Acuerdo con Santos FC', time: '2d' }
   ]);
   const [contentFilter, setContentFilter] = useState<string>('Todos');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -83,9 +90,14 @@ const UDLPChatInterface = () => {
   const [showVideoAvatarModal, setShowVideoAvatarModal] = useState<boolean>(false);
   const [showVideoModal, setShowVideoModal] = useState<boolean>(false);
   const [showExamplesModal, setShowExamplesModal] = useState<boolean>(false);
+  const [showFormExamplesModal, setShowFormExamplesModal] = useState<boolean>(false);
+  const [showVersionHistoryModal, setShowVersionHistoryModal] = useState<boolean>(false);
+  const [showContentDetailsModal, setShowContentDetailsModal] = useState<boolean>(false);
+  const [selectedContentDetails, setSelectedContentDetails] = useState<RecentContentType | null>(null);
   const [lastFormData, setLastFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number} | null>(null);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
-  
+  const [currentContentId, setCurrentContentId] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const languages = ['Español', 'English', 'Deutsch', 'Français', 'العربية'];
@@ -354,10 +366,12 @@ const UDLPChatInterface = () => {
 
         // Actualizar el historial
         const newContent: RecentContentType = {
+          id: Date.now().toString(),
           area: selectedArea,
           format: 'Audio/podcast',
           topic: podcastData.topic || 'Podcast generado',
-          time: 'ahora'
+          time: 'ahora',
+          contentId: currentContentId || undefined
         };
         setRecentContents(prev => [newContent, ...prev.slice(0, 3)]);
       }
@@ -478,12 +492,46 @@ const UDLPChatInterface = () => {
         showActions: true
       });
 
-      // 5. Actualizar el historial
+      // 6. Guardar versión en el historial
+      const contentId = currentContentId || `content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      if (!currentContentId) {
+        setCurrentContentId(contentId);
+      }
+
+      const versionContent: VersionContent[] = generatedContent.map(item => ({
+        format: item.format,
+        title: item.title,
+        content: item.content,
+        audioUrl: 'audioUrl' in item ? (item as any).audioUrl : undefined,
+        audioBase64: 'audioBase64' in item ? (item as any).audioBase64 : undefined,
+        mimeType: 'mimeType' in item ? (item as any).mimeType : undefined
+      }));
+
+      versionHistoryService.saveVersion(
+        contentId,
+        versionContent,
+        {
+          createdBy: 'innovacion.fundacion@udlaspalmas.es', // Mock user
+          area: selectedArea,
+          formats: selectedFormats,
+          languages: selectedLanguages,
+          topic: formData.tema,
+          status: 'draft',
+          wordCount: formData.wordCount,
+          audience: formData.audiencia,
+          isRefinement: false
+        },
+        formData
+      );
+
+      // 7. Actualizar el historial
       const newContent: RecentContentType = {
+        id: Date.now().toString(),
         area: selectedArea,
         format: selectedFormats.join(', '),
         topic: formData.tema,
-        time: 'ahora'
+        time: 'ahora',
+        contentId: contentId
       };
       setRecentContents(prev => [newContent, ...prev.slice(0, 3)]);
 
@@ -560,6 +608,36 @@ const UDLPChatInterface = () => {
         generatedContent: generatedContent,
         showActions: true
       });
+
+      // Guardar versión refinada
+      if (currentContentId) {
+        const versionContent: VersionContent[] = generatedContent.map(item => ({
+          format: item.format,
+          title: item.title,
+          content: item.content,
+          audioUrl: 'audioUrl' in item ? (item as any).audioUrl : undefined,
+          audioBase64: 'audioBase64' in item ? (item as any).audioBase64 : undefined,
+          mimeType: 'mimeType' in item ? (item as any).mimeType : undefined
+        }));
+
+        versionHistoryService.saveVersion(
+          currentContentId,
+          versionContent,
+          {
+            createdBy: 'innovacion.fundacion@udlaspalmas.es', // Mock user
+            area: selectedArea,
+            formats: selectedFormats,
+            languages: selectedLanguages,
+            topic: lastFormData?.tema || 'Contenido refinado',
+            status: 'draft',
+            wordCount: lastFormData?.wordCount,
+            audience: lastFormData?.audiencia,
+            isRefinement: true
+          },
+          lastFormData || undefined
+        );
+      }
+
       setRefinePrompt("");
     } catch (error) {
       console.error('Error al refinar contenido:', error);
@@ -1043,7 +1121,7 @@ const UDLPChatInterface = () => {
               </div>
             )}
             
-            <div className={`whitespace-pre-line text-sm text-gray-700 ${'audioUrl' in item && item.audioUrl ? 'mt-3' : ''} ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
+            <div className={`whitespace-pre-line text-sm text-gray-700 ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
               {item.content}
             </div>
 
@@ -1106,11 +1184,22 @@ const UDLPChatInterface = () => {
                     <div className="font-medium text-sm text-gray-900">{content.topic}</div>
                     <div className="text-xs text-gray-600 mt-1">
                       <div>{content.area}</div>
-                      <div className="flex justify-between mt-1">
+                      <div className="flex justify-between items-center mt-1">
                         <span className="bg-udlp-blue text-white px-2 py-1 rounded text-xs">
                           {content.format}
                         </span>
-                        <span>{content.time}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{content.time}</span>
+                          <button
+                            onClick={() => {
+                              setSelectedContentDetails(content);
+                              setShowContentDetailsModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-xs underline"
+                          >
+                            Ver detalles
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1149,9 +1238,17 @@ const UDLPChatInterface = () => {
                 <p className="text-sm text-gray-600">Especializado en cada área del club</p>
               </div>
             </div>
-            <div className="text-right">
-              <div className="font-medium text-sm text-gray-900">Francisco Ortiz</div>
-              <div className="text-xs text-gray-600">innovacion.fundacion@udlaspalmas.es</div>
+            <div className="text-right flex flex-col items-end gap-2">
+              <button
+                onClick={() => setShowFormExamplesModal(true)}
+                className="px-3 py-1 bg-udlp-yellow text-udlp-dark rounded-lg hover:bg-yellow-400 text-sm font-medium"
+              >
+                Aprender con Ejemplos
+              </button>
+              <div>
+                <div className="font-medium text-sm text-gray-900">Francisco Ortiz</div>
+                <div className="text-xs text-gray-600">innovacion.fundacion@udlaspalmas.es</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1288,6 +1385,12 @@ const UDLPChatInterface = () => {
                           🖼️ Crear imagen
                         </button>
                         <button
+                          onClick={() => setShowVersionHistoryModal(true)}
+                          className="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white"
+                        >
+                          📚 Ver historial
+                        </button>
+                        <button
                           onClick={() => handleAction('new')}
                           className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"
                         >
@@ -1349,8 +1452,28 @@ const UDLPChatInterface = () => {
         onCopyExample={handleCopyExample}
       />
     )}
-    </>
-  );
+    {showVersionHistoryModal && (
+      <VersionHistoryModal
+        isOpen={showVersionHistoryModal}
+        onClose={() => setShowVersionHistoryModal(false)}
+        contentId={currentContentId || undefined}
+      />
+    )}
+    {showContentDetailsModal && selectedContentDetails && (
+      <ContentDetailsModal
+        isOpen={showContentDetailsModal}
+        onClose={() => {
+          setShowContentDetailsModal(false);
+          setSelectedContentDetails(null);
+        }}
+        content={selectedContentDetails}
+      />
+    )}
+    {showFormExamplesModal && (
+      <FormExamplesModal onClose={() => setShowFormExamplesModal(false)} />
+    )}
+  </>
+);
 };
 
 export default UDLPChatInterface;
