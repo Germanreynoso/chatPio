@@ -10,6 +10,7 @@ import FormExamplesModal from './components/FormExamplesModal';
 import VersionHistoryModal from './components/VersionHistoryModal';
 import ContentDetailsModal from './components/ContentDetailsModal';
 import { versionHistoryService } from './services/versionHistoryService';
+import { fetchChatHistories } from './services/supabaseService';
 import type { VersionContent } from './types/versionHistory';
 
 // No olvides cambiar estos valores por los tuyos de Supabase
@@ -60,6 +61,7 @@ type RecentContentType = {
   topic: string;
   time: string;
   contentId?: string;
+  description?: string;
 };
 
 const UDLPChatInterface = () => {
@@ -76,12 +78,8 @@ const UDLPChatInterface = () => {
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['Español']);
-  const [recentContents, setRecentContents] = useState<RecentContentType[]>([
-    { id: '1', area: 'Fundación UD', format: 'instagram', topic: 'Visita hospital infantil', time: '2h' },
-    { id: '2', area: 'Hospitality', format: 'nota de prensa', topic: 'Nuevo menú VIP', time: '5h' },
-    { id: '3', area: 'Cantera', format: 'video', topic: 'Entrenamiento juvenil', time: '1d' },
-    { id: '4', area: 'Internacional', format: 'tweeter', topic: 'Acuerdo con Santos FC', time: '2d' }
-  ]);
+  const [recentContents, setRecentContents] = useState<RecentContentType[]>([]);
+  const [loadingRecentContents, setLoadingRecentContents] = useState<boolean>(true);
   const [contentFilter, setContentFilter] = useState<string>('Todos');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
@@ -146,6 +144,40 @@ const UDLPChatInterface = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const loadRecentContents = async () => {
+      try {
+        const histories = await fetchChatHistories();
+        const mappedContents: RecentContentType[] = histories.map((record) => {
+          const message = record.message;
+          let sessionData = null;
+          try {
+            sessionData = JSON.parse(record.session_id);
+          } catch (e) {
+            // session_id is not JSON
+          }
+          return {
+            id: record.id.toString(),
+            area: sessionData?.area || message.area || 'Desconocido',
+            format: sessionData?.formats?.join(', ') || message.format || message.formats?.join(', ') || 'Desconocido',
+            topic: sessionData?.details?.tema || message.tema || message.details?.tema || message.topic || 'Sin título',
+            time: 'Reciente', // Since no timestamp, use 'Reciente'
+            contentId: record.session_id,
+            description: sessionData?.details?.mensaje || message.details?.mensaje || ''
+          };
+        });
+        setRecentContents(mappedContents);
+      } catch (error) {
+        console.error('Error loading recent contents:', error);
+        // Keep empty or show error
+      } finally {
+        setLoadingRecentContents(false);
+      }
+    };
+
+    loadRecentContents();
+  }, []);
 
   const addMessage = (message: Partial<MessageType>) => {
     const newMessage: MessageType = {
@@ -1179,31 +1211,44 @@ const UDLPChatInterface = () => {
               </select>
               
               <div className="space-y-3">
-                {filteredContents.map((content, index) => (
-                  <div key={index} className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
-                    <div className="font-medium text-sm text-gray-900">{content.topic}</div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      <div>{content.area}</div>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="bg-udlp-blue text-white px-2 py-1 rounded text-xs">
-                          {content.format}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span>{content.time}</span>
-                          <button
-                            onClick={() => {
-                              setSelectedContentDetails(content);
-                              setShowContentDetailsModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 text-xs underline"
-                          >
-                            Ver detalles
-                          </button>
+                {loadingRecentContents ? (
+                  <div className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
+                    <div className="text-sm text-gray-600">Cargando contenidos recientes...</div>
+                  </div>
+                ) : filteredContents.length === 0 ? (
+                  <div className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
+                    <div className="text-sm text-gray-600">No hay contenidos recientes</div>
+                  </div>
+                ) : (
+                  filteredContents.map((content, index) => (
+                    <div key={index} className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
+                      <div className="font-medium text-sm text-gray-900">{content.topic}</div>
+                      {content.description && (
+                        <div className="text-xs text-gray-700 mt-1 italic">{content.description}</div>
+                      )}
+                      <div className="text-xs text-gray-600 mt-1">
+                        <div>{content.area}</div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="bg-udlp-blue text-white px-2 py-1 rounded text-xs">
+                            {content.format}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span>{content.time}</span>
+                            <button
+                              onClick={() => {
+                                setSelectedContentDetails(content);
+                                setShowContentDetailsModal(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 text-xs underline"
+                            >
+                              Ver detalles
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
             

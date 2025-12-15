@@ -10,6 +10,7 @@ type RecentContentType = {
   topic: string;
   time: string;
   contentId?: string;
+  description?: string;
 };
 
 interface ContentDetailsModalProps {

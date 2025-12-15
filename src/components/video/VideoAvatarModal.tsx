@@ -428,6 +428,49 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
     }
   };
 
+  // Handler for sending form data to webhook
+  const handleSendFormDataToWebhook = async () => {
+    const formData = {
+      avatar_id: avatarId,
+      script,
+      selectedLanguage,
+      voice: voiceId,
+      outputFormat,
+      resolution,
+      platform,
+      videoType: 'avatar_synthesia'
+    };
+
+    console.log('Enviando datos del formulario al webhook:', formData);
+
+    try {
+      const response = await fetch('https://n8n.icc-e.org/webhook-test/b3577f4e-827a-481c-8be3-cd38e00166e2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook:', response.status, response.statusText);
+
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('Respuesta del webhook:', responseText);
+        setGeneratedMessage('Datos enviados correctamente al webhook.');
+      } else {
+        const errorText = await response.text();
+        console.error('Error al enviar datos:', response.statusText, errorText);
+        handleError(new Error(`Error al enviar datos: ${response.statusText}`));
+        showError();
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      handleError(error);
+      showError();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -536,6 +579,15 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                   🎥 Validar idea con Synthesia
                 </>
               )}
+            </button>
+          </div>
+
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              onClick={handleSendFormDataToWebhook}
+              className="w-full bg-purple-600 text-white py-3 px-6 rounded-md hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
+            >
+              📤 Enviar datos del formulario
             </button>
           </div>
 
