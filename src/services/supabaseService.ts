@@ -30,7 +30,7 @@ export const fetchChatHistories = async (): Promise<ChatHistoryRecord[]> => {
   // Save to localStorage as versions
   if (data) {
     data.forEach(record => {
-      if (record.message && typeof record.message === 'object') {
+      if (record.message) {
         const message = record.message;
         let sessionData = null;
         try {
@@ -38,7 +38,19 @@ export const fetchChatHistories = async (): Promise<ChatHistoryRecord[]> => {
         } catch (e) {
           // session_id is not JSON
         }
-        const generatedContent = message.data?.bot_response || message.content || 'Contenido no disponible';
+        let generatedContent = 'Contenido no disponible';
+        let messageObj = message;
+        if (typeof message === 'string') {
+          try {
+            messageObj = JSON.parse(message);
+          } catch (e) {
+            // If not JSON, use as content
+            generatedContent = message;
+          }
+        }
+        if (typeof messageObj === 'object' && messageObj !== null) {
+          generatedContent = messageObj.content || messageObj.data?.bot_response || messageObj.details?.mensaje || 'Contenido no disponible';
+        }
         const content: VersionContent[] = [{
           format: sessionData?.formats?.join(', ') || message.formats?.join(', ') || 'Desconocido',
           title: 'Contenido generado',
