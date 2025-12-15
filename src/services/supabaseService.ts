@@ -32,23 +32,29 @@ export const fetchChatHistories = async (): Promise<ChatHistoryRecord[]> => {
     data.forEach(record => {
       if (record.message && typeof record.message === 'object') {
         const message = record.message;
-        const generatedContent = message.data?.bot_response || 'Contenido no disponible';
+        let sessionData = null;
+        try {
+          sessionData = JSON.parse(record.session_id);
+        } catch (e) {
+          // session_id is not JSON
+        }
+        const generatedContent = message.data?.bot_response || message.content || 'Contenido no disponible';
         const content: VersionContent[] = [{
-          format: message.formats?.join(', ') || 'Desconocido',
+          format: sessionData?.formats?.join(', ') || message.formats?.join(', ') || 'Desconocido',
           title: 'Contenido generado',
           content: generatedContent
         }];
         const metadata = {
           createdBy: 'usuario', // Mock
-          area: message.area || 'Desconocido',
-          formats: message.formats || [],
-          topic: message.details?.tema || 'Sin título',
+          area: sessionData?.area || message.area || 'Desconocido',
+          formats: sessionData?.formats || message.formats || [],
+          topic: sessionData?.details?.tema || message.details?.tema || message.topic || 'Sin título',
           status: 'draft' as const,
-          languages: message.languages || [],
-          audience: message.details?.audiencia,
+          languages: sessionData?.languages || message.languages || [],
+          audience: sessionData?.details?.audiencia || message.details?.audiencia,
           isRefinement: false
         };
-        const formData = message.details;
+        const formData = sessionData?.details || message.details;
         try {
           versionHistoryService.saveVersion(record.session_id, content, metadata, formData);
         } catch (error) {

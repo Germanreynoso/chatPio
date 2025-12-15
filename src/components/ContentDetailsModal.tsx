@@ -28,9 +28,10 @@ const ContentDetailsModal: React.FC<ContentDetailsModalProps> = ({ isOpen, onClo
   useEffect(() => {
     if (isOpen && content.contentId) {
       const contentVersions = versionHistoryService.getVersions(content.contentId);
-      setVersions(contentVersions);
-      if (contentVersions.length > 0) {
-        setSelectedVersion(contentVersions[0]); // Mostrar la versión más reciente por defecto
+      const reversedVersions = contentVersions.slice().reverse(); // Mostrar versiones más recientes primero
+      setVersions(reversedVersions);
+      if (reversedVersions.length > 0) {
+        setSelectedVersion(reversedVersions[0]); // Mostrar la versión más reciente por defecto
       }
     }
   }, [isOpen, content]);
