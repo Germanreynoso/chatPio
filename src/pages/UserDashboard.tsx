@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FormExamplesModal from '../components/FormExamplesModal';
-import { FileText, Eye } from 'lucide-react';
+import { FileText, Eye, BarChart3 } from 'lucide-react';
 
 const UserDashboard = () => {
   const { user } = useAuth();
   const [showExamplesModal, setShowExamplesModal] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -21,7 +22,7 @@ const UserDashboard = () => {
             </p>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Chat Interface */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
@@ -82,6 +83,37 @@ const UserDashboard = () => {
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     Ver Ejemplos
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Métricas
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        Dashboard de métricas
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <button
+                    onClick={() => navigate("/metrics")}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Ir a Métricas
                   </button>
                 </div>
               </div>

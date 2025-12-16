@@ -1,6 +1,6 @@
 // Importaciones de React y rutas
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ServiceStatusProvider } from './contexts/ServiceStatusContext';
 import { GlobalErrorProvider, useGlobalError } from './contexts/GlobalErrorContext';
@@ -13,6 +13,7 @@ import Unauthorized from './pages/Unauthorized';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ServiceStatusPage from './pages/ServiceStatusPage';
+import MetricsDashboard from './pages/MetricsDashboard';
 import './App.css';
 
 // Componente de ruta raíz que redirige según la autenticación y rol
@@ -35,6 +36,7 @@ const RootRedirect = () => {
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { showError } = useGlobalError();
+  const navigate = useNavigate();
 
   return (
     <nav className="bg-white shadow-sm">
@@ -53,6 +55,12 @@ const Navbar = () => {
                 className="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Test Error
+              </button>
+              <button
+                onClick={() => navigate("/metrics")}
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Métricas
               </button>
               <button
                 onClick={logout}
@@ -101,6 +109,12 @@ const AppContent = () => {
             <Route path="/chat" element={
               <ProtectedRoute>
                 <UDLPChatInterface />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/metrics" element={
+              <ProtectedRoute>
+                <MetricsDashboard />
               </ProtectedRoute>
             } />
 

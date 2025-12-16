@@ -96,3 +96,61 @@ export const fetchChatHistoryBySessionId = async (sessionId: string): Promise<Ch
 
   return data;
 };
+
+export const fetchSummaryMetrics = async () => {
+  const { data, error } = await supabase
+    .from('v_pio_summary_metrics')
+    .select('total_contenidos, areas_activas, horas_ahorradas, total_coste_apis')
+    .single();
+
+  if (error) {
+    console.error('Error fetching summary metrics:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const fetchContentByAreaMonth = async (): Promise<{ area: string; month: string; count: number; hours_saved: number; total_cost: number }[]> => {
+  const { data, error } = await supabase
+    .from('v_pio_metrics_by_area_month')
+    .select('area, month, count, hours_saved, total_cost')
+    .order('month', { ascending: false })
+    .order('count', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching content by area month:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchUsageByFormat = async (): Promise<{ format: string; count: number; hours_saved: number; total_cost: number }[]> => {
+  const { data, error } = await supabase
+    .from('v_pio_usage_by_format')
+    .select('*')
+    .order('count', { ascending: false })
+    .limit(5);
+
+  if (error) {
+    console.error('Error fetching usage by format:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchUsageByFormatArea = async (): Promise<{ area: string; format: string; count: number; hours_saved: number; total_cost: number }[]> => {
+  const { data, error } = await supabase
+    .from('v_pio_usage_by_format_area')
+    .select('area, format, count, hours_saved, total_cost')
+    .order('count', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching usage by format area:', error);
+    throw error;
+  }
+
+  return data || [];
+};
