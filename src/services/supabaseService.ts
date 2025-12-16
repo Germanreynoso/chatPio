@@ -111,12 +111,17 @@ export const fetchSummaryMetrics = async () => {
   return data;
 };
 
-export const fetchContentByAreaMonth = async (): Promise<{ area: string; month: string; count: number; hours_saved: number; total_cost: number }[]> => {
-  const { data, error } = await supabase
+export const fetchContentByAreaMonth = async (fromMonth?: string, toMonth?: string): Promise<{ area: string; month: string; count: number; hours_saved: number; total_cost: number }[]> => {
+  let query = supabase
     .from('v_pio_metrics_by_area_month')
     .select('area, month, count, hours_saved, total_cost')
     .order('month', { ascending: false })
     .order('count', { ascending: false });
+
+  if (fromMonth) query = query.gte('month', fromMonth);
+  if (toMonth) query = query.lte('month', toMonth);
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching content by area month:', error);
@@ -149,6 +154,131 @@ export const fetchUsageByFormatArea = async (): Promise<{ area: string; format: 
 
   if (error) {
     console.error('Error fetching usage by format area:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchGlobalKpis = async () => {
+  const { data, error } = await supabase
+    .from('v_pio_global_kpis')
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('Error fetching global KPIs:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const fetchGlobalKpisByMonth = async (): Promise<{ month: string; total_contenidos: number; areas_activas: number; horas_ahorradas: number; total_coste_apis: number }[]> => {
+  const { data, error } = await supabase
+    .from('v_pio_global_kpis_by_month')
+    .select('month, total_contenidos, areas_activas, horas_ahorradas, total_coste_apis')
+    .order('month', { ascending: false })
+    .limit(2);
+
+  if (error) {
+    console.error('Error fetching global KPIs by month:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchTopDrivers = async (): Promise<{ area: string; format: string; count: number; percent_contenidos: number; percent_horas: number }[]> => {
+  const { data, error } = await supabase
+    .from('v_pio_top_drivers')
+    .select('area, format, count, percent_contenidos, percent_horas');
+
+  if (error) {
+    console.error('Error fetching top drivers:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchTopDriversTrend = async (fromMonth?: string, toMonth?: string): Promise<{ area: string; format: string; current_count: number; previous_count: number | null; variation_percent: number | null }[]> => {
+  let query = supabase
+    .from('v_pio_top_drivers_trend')
+    .select('area, format, current_count, previous_count, variation_percent')
+    .order('current_count', { ascending: false });
+
+  // Note: this view may not have month, but if it does, add filter
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching top drivers trend:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchAutoInsights = async (fromMonth?: string, toMonth?: string): Promise<{ area: string; format: string; month: string; count_variation_pct: number | null; hours_variation_pct: number | null; cost_variation_pct: number | null; insight_label: string }[]> => {
+  let query = supabase
+    .from('v_pio_insights_auto')
+    .select('area, format, month, count_variation_pct, hours_variation_pct, cost_variation_pct, insight_label')
+    .order('month', { ascending: false });
+
+  if (fromMonth) query = query.gte('month', fromMonth);
+  if (toMonth) query = query.lte('month', toMonth);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching auto insights:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchSystemAlerts = async (): Promise<{ system_status: 'ok' | 'alert_cost' | 'alert_usage_drop' | 'alert_growth'; total_contenidos: number; total_cost: number; hours_saved: number } | null> => {
+  const { data, error } = await supabase
+    .from('v_pio_system_alerts')
+    .select('system_status, total_contenidos, total_cost, hours_saved')
+    .single();
+
+  if (error) {
+    console.error('Error fetching system alerts:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const fetchRecommendations = async (): Promise<{ area: string; format: string; cost_per_content: number; hours_per_content: number; recommendation: string }[]> => {
+  const { data, error } = await supabase
+    .from('v_pio_recommendations')
+    .select('area, format, cost_per_content, hours_per_content, recommendation');
+
+  if (error) {
+    console.error('Error fetching recommendations:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const fetchRecommendationsTrend = async (fromMonth?: string, toMonth?: string): Promise<{ area: string; format: string; month: string; cost_per_content: number; hours_per_content: number; cost_variation: number | null; hours_variation: number | null }[]> => {
+  let query = supabase
+    .from('v_pio_recommendations_trend')
+    .select('area, format, month, cost_per_content, hours_per_content, cost_variation, hours_variation')
+    .order('month', { ascending: false });
+
+  if (fromMonth) query = query.gte('month', fromMonth);
+  if (toMonth) query = query.lte('month', toMonth);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching recommendations trend:', error);
     throw error;
   }
 
