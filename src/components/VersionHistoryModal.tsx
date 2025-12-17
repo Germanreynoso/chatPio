@@ -31,7 +31,11 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({ isOpen, onClo
   const loadVersions = () => {
     if (contentId) {
       const contentVersions = versionHistoryService.getVersions(contentId);
-      setVersions(contentVersions);
+      // Filter to show only the first version (versionNumber === 1) and exclude those with "sin titulo"
+      const firstVersions = contentVersions
+        .filter(version => version.metadata.versionNumber === 1)
+        .filter(version => !version.content.some(c => c.title.toLowerCase() === 'sin título') && version.metadata.topic.toLowerCase() !== 'sin título');
+      setVersions(firstVersions);
     } else {
       // Load all versions if no specific contentId
       const allHistories = versionHistoryService.getAllHistories();
@@ -39,7 +43,11 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({ isOpen, onClo
       allHistories.forEach(history => {
         allVersions.push(...history.versions);
       });
-      setVersions(allVersions);
+      // Filter to show only the first version of each content and exclude those with "sin titulo"
+      const firstVersions = allVersions
+        .filter(version => version.metadata.versionNumber === 1)
+        .filter(version => !version.content.some(c => c.title.toLowerCase() === 'sin título') && version.metadata.topic.toLowerCase() !== 'sin título');
+      setVersions(firstVersions);
     }
   };
 

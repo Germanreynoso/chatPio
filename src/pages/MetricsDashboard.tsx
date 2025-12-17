@@ -1,5 +1,6 @@
 // src/pages/MetricsDashboard.tsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchSummaryMetrics, fetchContentByAreaMonth, fetchUsageByFormat, fetchUsageByFormatArea, fetchGlobalKpis, fetchGlobalKpisByMonth, fetchTopDrivers, fetchTopDriversTrend, fetchAutoInsights, fetchSystemAlerts, fetchRecommendations, fetchRecommendationsTrend } from '../services/supabaseService';
 
@@ -49,6 +50,8 @@ export default function MetricsDashboard() {
   const [recommendationsTrend, setRecommendationsTrend] = useState<{ area: string; format: string; month: string; cost_per_content: number; hours_per_content: number; cost_variation: number | null; hours_variation: number | null }[]>([]);
   const [loadingRecommendationsTrend, setLoadingRecommendationsTrend] = useState(true);
   const [errorRecommendationsTrend, setErrorRecommendationsTrend] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const calculateVariation = (current: number | null | undefined, previous: number | null | undefined) => {
     if (current == null || previous == null || previous === 0) return '—';
@@ -291,11 +294,16 @@ export default function MetricsDashboard() {
   }, [appliedFromMonth, appliedToMonth]);
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard de Métricas</h1>
-        <p className="text-sm text-muted-foreground">
-          Métricas de uso del sistema Pío
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard de Métricas</h1>
+          <p className="text-sm text-muted-foreground">
+            Métricas de uso del sistema Pío
+          </p>
+        </div>
+        <button onClick={() => navigate('/chat')} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+          Volver al Chat
+        </button>
       </div>
 
       <div className="flex gap-4 mb-6">
