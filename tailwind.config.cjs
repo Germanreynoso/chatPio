@@ -14,6 +14,24 @@ module.exports = {
           'gray': '#F8F8F8',
           'dark': '#22223B',
         },
+        primary: {
+          DEFAULT: '#0057B8', // udlp-blue
+          light: '#3379C6',
+          dark: '#003D81',
+        },
+        secondary: {
+          DEFAULT: '#FFD600', // udlp-yellow
+          light: '#FFDE33',
+          dark: '#B39600',
+        },
+        dark: {
+          DEFAULT: '#22223B', // udlp-dark
+          light: '#4E4E62',
+        },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          muted: '#F8F8F8', // udlp-gray
+        }
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],

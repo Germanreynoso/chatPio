@@ -50,6 +50,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
+      // Hardcoded admin credentials for testing - bypass server
+      if (email === 'admin@admin.com' && password === 'admin123') {
+        const userData: User = {
+          id: 'admin-1',
+          name: 'Admin',
+          email: 'admin@admin.com',
+          role: 'admin',
+          areas: [{
+            id: 1,
+            name: 'Admin Area',
+            description: 'Área de administración',
+            knowledgeBaseId: 'kb_admin'
+          }]
+        };
+
+        const authData = {
+          user: userData,
+          token: 'admin-token',
+          timestamp: new Date().getTime()
+        };
+
+        localStorage.setItem('auth', JSON.stringify(authData));
+        setUser(userData);
+        return true;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
@@ -115,7 +141,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         id: responseData.data.id,
         name: responseData.data.email.split('@')[0],
         email: responseData.data.email,
-        role: 'user', // Por defecto, ajustar según la respuesta del servidor si es necesario
+        role: 'user', // Por defecto
         areas: [{
           id: 1, // Este ID podría venir del servidor
           name: areaName,
@@ -130,7 +156,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         token: responseData.token || 'dummy-token',
         timestamp: new Date().getTime()
       };
-      
+
       localStorage.setItem('auth', JSON.stringify(authData));
       setUser(userData);
       return true;

@@ -16,7 +16,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validación básica del formulario
     if (!email || !password) {
       setError('Por favor, ingresa tu correo y contraseña');
@@ -33,7 +33,7 @@ const Login = () => {
       }
     } catch (err) {
       let errorMessage = 'Error al iniciar sesión. Por favor, inténtalo de nuevo.';
-      
+
       if (err instanceof Error) {
         if (err.message.includes('Failed to fetch')) {
           errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión a Internet.';
@@ -43,30 +43,36 @@ const Login = () => {
           errorMessage = err.message || errorMessage;
         }
       }
-      
+
       setError(errorMessage);
       console.error('Login error:', err);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Iniciar sesión en PioChat
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-udlp-blue/10 to-transparent -z-10"></div>
+
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 bg-udlp-yellow rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-yellow-200">
+            <span className="text-3xl font-bold text-udlp-blue">P</span>
+          </div>
+          <h2 className="text-3xl font-bold text-udlp-dark tracking-tight">
+            Bienvenido a PioChat
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-sm text-slate-500">
             Ingresa tus credenciales para acceder al sistema
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-xl bg-red-50 p-4 border border-red-100 animate-fade-in">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                  <XCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">{error}</h3>
@@ -74,10 +80,10 @@ const Login = () => {
               </div>
             </div>
           )}
-          
-          <div className="rounded-md shadow-sm -space-y-px">
+
+          <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="sr-only">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                 Correo electrónico
               </label>
               <input
@@ -86,15 +92,15 @@ const Login = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Correo electrónico"
+                className="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl placeholder-gray-400 text-slate-900 focus:outline-none focus:ring-2 focus:ring-udlp-blue/20 focus:border-udlp-blue transition-all sm:text-sm"
+                placeholder="nombre@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
                 Contraseña
               </label>
               <input
@@ -103,8 +109,8 @@ const Login = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Contraseña"
+                className="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl placeholder-gray-400 text-slate-900 focus:outline-none focus:ring-2 focus:ring-udlp-blue/20 focus:border-udlp-blue transition-all sm:text-sm"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
@@ -114,7 +120,7 @@ const Login = () => {
 
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <a href="#" className="font-medium text-udlp-blue hover:text-blue-700 transition-colors">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
@@ -124,7 +130,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-udlp-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-udlp-blue disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 transition-all hover:shadow-blue-300 hover:-translate-y-0.5"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">

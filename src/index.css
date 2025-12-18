@@ -20,24 +20,25 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   color: #22223B;
+  letter-spacing: -0.025em;
 }
 
 input,
 textarea,
 select {
-  transition: box-shadow 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.5);
-  border-color: transparent;
+  box-shadow: 0 0 0 2px rgba(0, 87, 184, 0.2);
+  border-color: #0057B8;
 }
 
 button {
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scrollbar personalizada */
@@ -47,16 +48,18 @@ button {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #f3f4f6;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #FFD600;
+  background-color: #CBD5E1;
   border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #e6c200;
+  background-color: #94A3B8;
 }
 
 /* Clases personalizadas */

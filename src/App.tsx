@@ -18,7 +18,7 @@ import './App.css';
 
 // Componente de ruta raíz que redirige según la autenticación y rol
 const RootRedirect = () => {
-  const { isAuthenticated, user, hasPermission } = useAuth();
+  const { isAuthenticated, hasPermission } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -32,32 +32,35 @@ const RootRedirect = () => {
   }
 };
 
-// Componente de navegación de ejemplo
+// Componente de navegación
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { showError } = useGlobalError();
   const navigate = useNavigate();
 
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-indigo-600">PioChat</span>
+          <div className="flex items-center gap-8">
+            <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => navigate('/')}>
+              <div className="w-8 h-8 bg-udlp-yellow rounded-lg flex items-center justify-center mr-2.5 shadow-sm">
+                <span className="text-udlp-blue font-bold text-lg">P</span>
+              </div>
+              <span className="text-xl font-bold text-udlp-dark tracking-tight">PioChat</span>
             </div>
           </div>
           {user && (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate("/metrics")}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-udlp-blue bg-blue-50 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-udlp-blue"
               >
                 Métricas
               </button>
+              <div className="h-6 w-px bg-gray-200 mx-1"></div>
               <button
                 onClick={logout}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-slate-600 bg-white hover:bg-gray-50 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
               >
                 Cerrar sesión
               </button>
@@ -77,11 +80,6 @@ const AppContent = () => {
   React.useEffect(() => {
     setGlobalErrorNotifier(showError);
   }, [showError]);
-
-  // Test button - remove this after testing
-  const testError = () => {
-    showError("Servicio momentáneamente no disponible");
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
