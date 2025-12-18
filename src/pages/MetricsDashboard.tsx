@@ -1,7 +1,21 @@
-// src/pages/MetricsDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  BarChart3,
+  Clock,
+  DollarSign,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  Filter,
+  AlertTriangle,
+  CheckCircle2,
+  TrendingUp,
+  Lightbulb,
+  ArrowLeft
+} from 'lucide-react';
 import { fetchSummaryMetrics, fetchContentByAreaMonth, fetchUsageByFormat, fetchUsageByFormatArea, fetchGlobalKpis, fetchGlobalKpisByMonth, fetchTopDrivers, fetchTopDriversTrend, fetchAutoInsights, fetchSystemAlerts, fetchRecommendations, fetchRecommendationsTrend } from '../services/supabaseService';
 
 export default function MetricsDashboard() {
@@ -54,10 +68,9 @@ export default function MetricsDashboard() {
   const navigate = useNavigate();
 
   const calculateVariation = (current: number | null | undefined, previous: number | null | undefined) => {
-    if (current == null || previous == null || previous === 0) return '—';
+    if (current == null || previous == null || previous === 0) return null;
     const percent = ((current - previous) / previous) * 100;
-    const sign = percent > 0 ? '↑' : '↓';
-    return `${sign} ${Math.abs(percent).toFixed(0)}%`;
+    return percent;
   };
 
   const getMonthOptions = () => {
@@ -292,372 +305,384 @@ export default function MetricsDashboard() {
     };
     loadContentData();
   }, [appliedFromMonth, appliedToMonth]);
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="min-h-screen bg-gray-50/50 p-6 lg:p-8 space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Dashboard de Métricas</h1>
-          <p className="text-sm text-muted-foreground">
-            Métricas de uso del sistema Pío
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard de Métricas</h1>
+          <p className="text-slate-500 mt-1 flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            Análisis detallado del rendimiento y uso del sistema Pío
           </p>
         </div>
-        <button onClick={() => navigate('/chat')} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+        <button
+          onClick={() => navigate('/chat')}
+          className="group flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm font-medium"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Volver al Chat
         </button>
       </div>
 
-      <div className="flex gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Desde (YYYY-MM)</label>
-          <select value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-            <option value="">Seleccionar</option>
-            {getMonthOptions().map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Hasta (YYYY-MM)</label>
-          <select value={toMonth} onChange={(e) => setToMonth(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-            <option value="">Seleccionar</option>
-            {getMonthOptions().map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </div>
-        <div className="flex items-end">
-          <button onClick={() => { setAppliedFromMonth(fromMonth || null); setAppliedToMonth(toMonth || null); }} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Aplicar filtros
+      {/* Filters Section */}
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex flex-col md:flex-row gap-6 items-end">
+          <div className="w-full md:w-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" /> Desde
+              </label>
+              <select
+                value={fromMonth}
+                onChange={(e) => setFromMonth(e.target.value)}
+                className="w-full rounded-lg border-gray-200 bg-gray-50/50 text-slate-700 text-sm focus:border-udlp-blue focus:ring-udlp-blue transition-colors"
+              >
+                <option value="">Todos los meses</option>
+                {getMonthOptions().map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" /> Hasta
+              </label>
+              <select
+                value={toMonth}
+                onChange={(e) => setToMonth(e.target.value)}
+                className="w-full rounded-lg border-gray-200 bg-gray-50/50 text-slate-700 text-sm focus:border-udlp-blue focus:ring-udlp-blue transition-colors"
+              >
+                <option value="">Todos los meses</option>
+                {getMonthOptions().map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <button
+            onClick={() => { setAppliedFromMonth(fromMonth || null); setAppliedToMonth(toMonth || null); }}
+            className="w-full md:w-auto px-6 py-2.5 bg-udlp-blue text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2 font-medium"
+          >
+            <Filter className="w-4 h-4" />
+            Aplicar Filtros
           </button>
         </div>
       </div>
 
+      {/* System Alert Section */}
       {loadingSystemAlert ? (
-        <div className="rounded-xl border p-6 bg-gray-50">
-          <div className="text-sm text-muted-foreground">Cargando estado del sistema...</div>
-        </div>
+        <div className="animate-pulse h-24 bg-white rounded-2xl border border-gray-100"></div>
       ) : errorSystemAlert ? (
-        <div className="rounded-xl border p-6 bg-red-50 text-red-800">
-          <div className="text-sm">{errorSystemAlert}</div>
-        </div>
-      ) : systemAlert ? (
-        <div className={`rounded-xl border p-6 ${systemAlert.system_status === 'ok' ? 'bg-green-50 text-green-800' : systemAlert.system_status === 'alert_cost' ? 'bg-red-50 text-red-800' : systemAlert.system_status === 'alert_usage_drop' ? 'bg-yellow-50 text-yellow-800' : 'bg-blue-50 text-blue-800'}`}>
-          <div className="flex items-center">
-            <div className={`w-4 h-4 rounded-full mr-3 ${systemAlert.system_status === 'ok' ? 'bg-green-500' : systemAlert.system_status === 'alert_cost' ? 'bg-red-500' : systemAlert.system_status === 'alert_usage_drop' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
-            <div>
-              <h2 className="font-medium">Estado del sistema</h2>
-              <p className="text-sm">
-                {systemAlert.system_status === 'ok' ? 'Sistema estable este mes' :
-                 systemAlert.system_status === 'alert_cost' ? 'Costes de API fuera de rango' :
-                 systemAlert.system_status === 'alert_usage_drop' ? 'Caída significativa de uso' :
-                 'Crecimiento acelerado de uso'}
-              </p>
-            </div>
+        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-6 flex items-start gap-4">
+          <AlertTriangle className="w-6 h-6 text-red-600 shrink-0" />
+          <div>
+            <h3 className="font-semibold text-red-900">Error del Sistema</h3>
+            <p className="text-red-700 text-sm mt-1">{errorSystemAlert}</p>
           </div>
         </div>
-      ) : (
-        <div className="rounded-xl border p-6 bg-gray-50">
-          <div className="text-sm text-muted-foreground">—</div>
+      ) : systemAlert ? (
+        <div className={`rounded-2xl border p-6 flex items-start gap-4 shadow-sm transition-all duration-300
+          ${systemAlert.system_status === 'ok' ? 'bg-emerald-50/50 border-emerald-100' :
+            systemAlert.system_status === 'alert_cost' ? 'bg-red-50/50 border-red-100' :
+              systemAlert.system_status === 'alert_usage_drop' ? 'bg-amber-50/50 border-amber-100' :
+                'bg-blue-50/50 border-blue-100'}`}
+        >
+          <div className={`p-2 rounded-xl shrink-0
+            ${systemAlert.system_status === 'ok' ? 'bg-emerald-100 text-emerald-600' :
+              systemAlert.system_status === 'alert_cost' ? 'bg-red-100 text-red-600' :
+                systemAlert.system_status === 'alert_usage_drop' ? 'bg-amber-100 text-amber-600' :
+                  'bg-blue-100 text-blue-600'}`}
+          >
+            {systemAlert.system_status === 'ok' ? <CheckCircle2 className="w-6 h-6" /> :
+              systemAlert.system_status === 'alert_cost' ? <DollarSign className="w-6 h-6" /> :
+                <Activity className="w-6 h-6" />}
+          </div>
+          <div>
+            <h2 className={`font-bold text-lg
+              ${systemAlert.system_status === 'ok' ? 'text-emerald-900' :
+                systemAlert.system_status === 'alert_cost' ? 'text-red-900' :
+                  systemAlert.system_status === 'alert_usage_drop' ? 'text-amber-900' :
+                    'text-blue-900'}`}
+            >
+              Estado del Sistema
+            </h2>
+            <p className={`text-sm mt-1 font-medium
+              ${systemAlert.system_status === 'ok' ? 'text-emerald-700' :
+                systemAlert.system_status === 'alert_cost' ? 'text-red-700' :
+                  systemAlert.system_status === 'alert_usage_drop' ? 'text-amber-700' :
+                    'text-blue-700'}`}
+            >
+              {systemAlert.system_status === 'ok' ? 'El sistema está funcionando de manera óptima y estable.' :
+                systemAlert.system_status === 'alert_cost' ? 'Atención: Los costes de API han superado el umbral esperado.' :
+                  systemAlert.system_status === 'alert_usage_drop' ? 'Se ha detectado una caída significativa en el uso del sistema.' :
+                    'Crecimiento acelerado de uso detectado.'}
+            </p>
+          </div>
         </div>
-      )}
+      ) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
-        <MetricCard title="Total de contenidos" value={metrics.totalContenidos} variation={totalContenidosVariation} />
-        <MetricCard title="Horas ahorradas" value={metrics.tiempoAhorrado} variation={horasAhorradasVariation} />
-        <MetricCard title="Coste total de API" value={metrics.costesApis} variation={totalCosteApisVariation} />
-        <MetricCard title="Áreas activas" value={metrics.areasActivas} />
-        <div className="rounded-xl border p-4">
-          <p className="text-sm text-muted-foreground">Formatos Más Utilizados</p>
-          {loadingUsageByFormat ? (
-            <div className="text-sm text-muted-foreground mt-2">Cargando...</div>
-          ) : errorUsageByFormat ? (
-            <div className="text-sm text-red-500 mt-2">{errorUsageByFormat}</div>
-          ) : usageByFormat.length > 0 ? (
-            <div className="space-y-2 mt-2">
-              {usageByFormat.map((item) => (
-                <div key={item.format} className="text-sm border-b pb-1">
-                  <div className="font-medium">{item.format}</div>
-                  <div>Conteo de contenidos: {item.count}</div>
-                  <div>Horas ahorradas: {item.hours_saved.toFixed(1)}</div>
-                  <div>Coste de API: ${item.total_cost.toFixed(2)}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground mt-2">—</div>
-          )}
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <MetricCard
+          title="Total Contenidos"
+          value={metrics.totalContenidos}
+          variation={totalContenidosVariation}
+          icon={<BarChart3 className="w-5 h-5" />}
+          color="blue"
+        />
+        <MetricCard
+          title="Horas Ahorradas"
+          value={metrics.tiempoAhorrado}
+          variation={horasAhorradasVariation}
+          icon={<Clock className="w-5 h-5" />}
+          color="emerald"
+        />
+        <MetricCard
+          title="Coste API"
+          value={metrics.costesApis}
+          variation={totalCosteApisVariation}
+          icon={<DollarSign className="w-5 h-5" />}
+          color="amber"
+        />
+        <MetricCard
+          title="Áreas Activas"
+          value={metrics.areasActivas}
+          icon={<Activity className="w-5 h-5" />}
+          color="indigo"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Formats Card */}
+        <div className="xl:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-gray-50">
+            <h2 className="font-bold text-slate-900 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-udlp-blue" />
+              Formatos Más Utilizados
+            </h2>
+          </div>
+          <div className="p-6 flex-1 overflow-y-auto max-h-[400px]">
+            {loadingUsageByFormat ? (
+              <div className="space-y-4 animate-pulse">
+                {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-50 rounded-xl"></div>)}
+              </div>
+            ) : errorUsageByFormat ? (
+              <div className="text-sm text-red-500">{errorUsageByFormat}</div>
+            ) : usageByFormat.length > 0 ? (
+              <div className="space-y-4">
+                {usageByFormat.map((item) => (
+                  <div key={item.format} className="group p-4 rounded-xl bg-gray-50/50 hover:bg-blue-50/50 border border-gray-100 hover:border-blue-100 transition-all duration-200">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-semibold text-slate-900">{item.format}</span>
+                      <span className="text-xs font-medium px-2 py-1 bg-white rounded-full text-slate-600 border border-gray-100 shadow-sm">
+                        {item.count} usos
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-xs text-slate-500">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                        {item.hours_saved.toFixed(1)}h ahorradas
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <DollarSign className="w-3.5 h-3.5 text-amber-500" />
+                        ${item.total_cost.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-400">No hay datos disponibles</div>
+            )}
+          </div>
+        </div>
+
+        {/* Monthly Chart */}
+        <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-50">
+            <h2 className="font-bold text-slate-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-udlp-blue" />
+              Evolución Mensual
+            </h2>
+          </div>
+          <div className="p-6">
+            {loadingMonthlyUsage ? (
+              <div className="h-[300px] bg-gray-50 rounded-xl animate-pulse"></div>
+            ) : errorMonthlyUsage ? (
+              <div className="text-sm text-red-500">{errorMonthlyUsage}</div>
+            ) : monthlyUsageData.length > 0 ? (
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyUsageData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 12 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar
+                      dataKey="totalCount"
+                      fill="#0057B8"
+                      radius={[6, 6, 0, 0]}
+                      barSize={40}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-center py-20 text-slate-400">No hay datos disponibles</div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Contenido generado por área y mes</h2>
-          {loadingContentData ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorContentData ? (
-            <div className="text-sm text-red-500">{errorContentData}</div>
-          ) : contentData.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Mes</th>
-                  <th className="text-left">Conteo de contenidos</th>
-                  <th className="text-left">Horas ahorradas</th>
-                  <th className="text-left">Coste total de API</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contentData.map((row) => (
-                  <tr key={`${row.area}-${row.month}`}>
-                    <td>{row.area}</td>
-                    <td>{row.month}</td>
-                    <td>{row.count}</td>
-                    <td>{row.hours_saved.toFixed(1)}</td>
-                    <td>${row.total_cost.toFixed(2)}</td>
+      {/* Main Data Tables Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Content by Area Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-50">
+            <h2 className="font-bold text-slate-900">Contenido por Área</h2>
+          </div>
+          <div className="overflow-x-auto">
+            {loadingContentData ? (
+              <div className="p-6 space-y-4 animate-pulse">
+                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-50 rounded-lg"></div>)}
+              </div>
+            ) : errorContentData ? (
+              <div className="p-6 text-sm text-red-500">{errorContentData}</div>
+            ) : contentData.length > 0 ? (
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-slate-500 uppercase bg-gray-50/80">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Área</th>
+                    <th className="px-6 py-4 font-semibold">Mes</th>
+                    <th className="px-6 py-4 font-semibold text-right">Contenidos</th>
+                    <th className="px-6 py-4 font-semibold text-right">Ahorro</th>
+                    <th className="px-6 py-4 font-semibold text-right">Coste</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {contentData.map((row) => (
+                    <tr key={`${row.area}-${row.month}`} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-slate-900">{row.area}</td>
+                      <td className="px-6 py-4 text-slate-600">{row.month}</td>
+                      <td className="px-6 py-4 text-right text-slate-600">{row.count}</td>
+                      <td className="px-6 py-4 text-right text-emerald-600 font-medium">{row.hours_saved.toFixed(1)}h</td>
+                      <td className="px-6 py-4 text-right text-slate-600">${row.total_cost.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-8 text-center text-slate-400">No hay datos disponibles</div>
+            )}
+          </div>
         </div>
 
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Comparativa de uso mes a mes</h2>
-          {loadingMonthlyUsage ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorMonthlyUsage ? (
-            <div className="text-sm text-red-500">{errorMonthlyUsage}</div>
-          ) : monthlyUsageData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyUsageData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="totalCount" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Áreas activas por formato</h2>
-          {loadingUsageByFormatArea ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorUsageByFormatArea ? (
-            <div className="text-sm text-red-500">{errorUsageByFormatArea}</div>
-          ) : usageByFormatArea.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Formato</th>
-                  <th className="text-left">Conteo de contenidos</th>
-                  <th className="text-left">Horas ahorradas</th>
-                  <th className="text-left">Coste total de API</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usageByFormatArea.map((row) => (
-                  <tr key={`${row.area}-${row.format}`}>
-                    <td>{row.area}</td>
-                    <td>{row.format}</td>
-                    <td>{row.count}</td>
-                    <td>{row.hours_saved.toFixed(1)}</td>
-                    <td>${row.total_cost.toFixed(2)}</td>
+        {/* Auto Insights Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-50">
+            <h2 className="font-bold text-slate-900 flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-udlp-yellow" />
+              Insights Automáticos
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            {loadingAutoInsights ? (
+              <div className="p-6 space-y-4 animate-pulse">
+                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-50 rounded-lg"></div>)}
+              </div>
+            ) : errorAutoInsights ? (
+              <div className="p-6 text-sm text-red-500">{errorAutoInsights}</div>
+            ) : autoInsights.length > 0 ? (
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-slate-500 uppercase bg-gray-50/80">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Contexto</th>
+                    <th className="px-6 py-4 font-semibold">Insight</th>
+                    <th className="px-6 py-4 font-semibold text-right">Var. Cont.</th>
+                    <th className="px-6 py-4 font-semibold text-right">Var. Horas</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {autoInsights.map((row, index) => (
+                    <tr key={`${row.area}-${row.format}-${index}`} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-900">{row.area}</div>
+                        <div className="text-xs text-slate-500">{row.format}</div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">{row.insight_label}</td>
+                      <td className="px-6 py-4 text-right">
+                        <VariationBadge value={row.count_variation_pct} />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <VariationBadge value={row.hours_variation_pct} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-8 text-center text-slate-400">No hay insights disponibles</div>
+            )}
+          </div>
         </div>
+      </div>
 
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Principales impulsores de uso</h2>
-          {loadingTopDrivers ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorTopDrivers ? (
-            <div className="text-sm text-red-500">{errorTopDrivers}</div>
-          ) : topDrivers.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Formato</th>
-                  <th className="text-left">% del total de contenidos</th>
-                  <th className="text-left">% del total de horas ahorradas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topDrivers.map((row) => (
-                  <tr key={`${row.area}-${row.format}`}>
-                    <td>{row.area}</td>
-                    <td>{row.format}</td>
-                    <td>{row.percent_contenidos.toFixed(1)}%</td>
-                    <td>{row.percent_horas.toFixed(1)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
+      {/* Recommendations Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-50">
+          <h2 className="font-bold text-slate-900">Recomendaciones de Optimización</h2>
         </div>
-
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Tendencia de principales impulsores</h2>
-          {loadingTopDriversTrend ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorTopDriversTrend ? (
-            <div className="text-sm text-red-500">{errorTopDriversTrend}</div>
-          ) : topDriversTrend.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Formato</th>
-                  <th className="text-left">Contenidos (mes actual)</th>
-                  <th className="text-left">Variación vs mes anterior</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topDriversTrend.map((row) => (
-                  <tr key={`${row.area}-${row.format}`}>
-                    <td>{row.area}</td>
-                    <td>{row.format}</td>
-                    <td>{row.current_count}</td>
-                    <td className={row.variation_percent && row.variation_percent > 0 ? 'text-green-600' : row.variation_percent && row.variation_percent < 0 ? 'text-red-600' : ''}>
-                      {row.variation_percent !== null ? `${row.variation_percent > 0 ? '↑' : '↓'} ${Math.abs(row.variation_percent).toFixed(1)}%` : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Insights automáticos</h2>
-          {loadingAutoInsights ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorAutoInsights ? (
-            <div className="text-sm text-red-500">{errorAutoInsights}</div>
-          ) : autoInsights.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Formato</th>
-                  <th className="text-left">Insight</th>
-                  <th className="text-left">Variación de contenidos</th>
-                  <th className="text-left">Variación de horas</th>
-                  <th className="text-left">Variación de coste</th>
-                </tr>
-              </thead>
-              <tbody>
-                {autoInsights.map((row, index) => (
-                  <tr key={`${row.area}-${row.format}-${index}`}>
-                    <td>{row.area}</td>
-                    <td>{row.format}</td>
-                    <td>{row.insight_label}</td>
-                    <td className={row.count_variation_pct && row.count_variation_pct > 0 ? 'text-green-600' : row.count_variation_pct && row.count_variation_pct < 0 ? 'text-red-600' : ''}>
-                      {row.count_variation_pct !== null ? `${row.count_variation_pct > 0 ? '↑' : '↓'} ${Math.abs(row.count_variation_pct).toFixed(1)}%` : '—'}
-                    </td>
-                    <td className={row.hours_variation_pct && row.hours_variation_pct > 0 ? 'text-green-600' : row.hours_variation_pct && row.hours_variation_pct < 0 ? 'text-red-600' : ''}>
-                      {row.hours_variation_pct !== null ? `${row.hours_variation_pct > 0 ? '↑' : '↓'} ${Math.abs(row.hours_variation_pct).toFixed(1)}%` : '—'}
-                    </td>
-                    <td className={row.cost_variation_pct && row.cost_variation_pct > 0 ? 'text-green-600' : row.cost_variation_pct && row.cost_variation_pct < 0 ? 'text-red-600' : ''}>
-                      {row.cost_variation_pct !== null ? `${row.cost_variation_pct > 0 ? '↑' : '↓'} ${Math.abs(row.cost_variation_pct).toFixed(1)}%` : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Recomendaciones de optimización</h2>
+        <div className="overflow-x-auto">
           {loadingRecommendations ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
+            <div className="p-6 space-y-4 animate-pulse">
+              {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-50 rounded-lg"></div>)}
+            </div>
           ) : errorRecommendations ? (
-            <div className="text-sm text-red-500">{errorRecommendations}</div>
+            <div className="p-6 text-sm text-red-500">{errorRecommendations}</div>
           ) : recommendations.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-slate-500 uppercase bg-gray-50/80">
                 <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Formato</th>
-                  <th className="text-left">Coste por contenido</th>
-                  <th className="text-left">Horas ahorradas por contenido</th>
-                  <th className="text-left">Recomendación</th>
+                  <th className="px-6 py-4 font-semibold">Área / Formato</th>
+                  <th className="px-6 py-4 font-semibold text-right">Coste / Contenido</th>
+                  <th className="px-6 py-4 font-semibold text-right">Horas / Contenido</th>
+                  <th className="px-6 py-4 font-semibold">Recomendación</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {recommendations.map((row, index) => (
-                  <tr key={`${row.area}-${row.format}-${index}`}>
-                    <td>{row.area}</td>
-                    <td>{row.format}</td>
-                    <td>${row.cost_per_content.toFixed(2)}</td>
-                    <td>{row.hours_per_content.toFixed(1)}</td>
-                    <td className={row.recommendation.includes('Reducir') ? 'text-red-600' : row.recommendation.includes('Priorizar') ? 'text-green-600' : 'text-gray-600'}>
-                      {row.recommendation}
+                  <tr key={`${row.area}-${row.format}-${index}`} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-slate-900">{row.area}</div>
+                      <div className="text-xs text-slate-500">{row.format}</div>
+                    </td>
+                    <td className="px-6 py-4 text-right text-slate-600">${row.cost_per_content.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right text-slate-600">{row.hours_per_content.toFixed(1)}h</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        ${row.recommendation.includes('Reducir') ? 'bg-red-50 text-red-700 border border-red-100' :
+                          row.recommendation.includes('Priorizar') ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                            'bg-gray-100 text-gray-700 border border-gray-200'}`}>
+                        {row.recommendation}
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <div className="text-sm text-muted-foreground">—</div>
-          )}
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <h2 className="font-medium mb-2">Evolución de eficiencia por área y formato</h2>
-          {loadingRecommendationsTrend ? (
-            <div className="text-sm text-muted-foreground">Cargando...</div>
-          ) : errorRecommendationsTrend ? (
-            <div className="text-sm text-red-500">{errorRecommendationsTrend}</div>
-          ) : recommendationsTrend.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left">Área</th>
-                  <th className="text-left">Formato</th>
-                  <th className="text-left">Mes</th>
-                  <th className="text-left">Coste / contenido</th>
-                  <th className="text-left">Horas / contenido</th>
-                  <th className="text-left">Variación coste</th>
-                  <th className="text-left">Variación horas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recommendationsTrend.map((row) => (
-                  <tr key={`${row.area}-${row.format}-${row.month}`}>
-                    <td>{row.area}</td>
-                    <td>{row.format}</td>
-                    <td>{row.month}</td>
-                    <td>${row.cost_per_content.toFixed(2)}</td>
-                    <td>{row.hours_per_content.toFixed(1)}</td>
-                    <td className={row.cost_variation && row.cost_variation > 0 ? 'text-green-600' : row.cost_variation && row.cost_variation < 0 ? 'text-red-600' : ''}>
-                      {row.cost_variation !== null ? `${row.cost_variation > 0 ? '↑' : '↓'} ${Math.abs(row.cost_variation).toFixed(1)}%` : '—'}
-                    </td>
-                    <td className={row.hours_variation && row.hours_variation > 0 ? 'text-green-600' : row.hours_variation && row.hours_variation < 0 ? 'text-red-600' : ''}>
-                      {row.hours_variation !== null ? `${row.hours_variation > 0 ? '↑' : '↓'} ${Math.abs(row.hours_variation).toFixed(1)}%` : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-sm text-muted-foreground">—</div>
+            <div className="p-8 text-center text-slate-400">No hay recomendaciones disponibles</div>
           )}
         </div>
       </div>
@@ -665,12 +690,47 @@ export default function MetricsDashboard() {
   );
 }
 
-function MetricCard({ title, value, variation }: { title: string; value: string; variation?: string }) {
+function MetricCard({ title, value, variation, icon, color = "blue" }: { title: string; value: string; variation?: number | null; icon: React.ReactNode; color?: "blue" | "emerald" | "amber" | "indigo" }) {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-600",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber: "bg-amber-50 text-amber-600",
+    indigo: "bg-indigo-50 text-indigo-600"
+  };
+
   return (
-    <div className="rounded-xl border p-4">
-      <p className="text-sm text-muted-foreground">{title}</p>
-      <p className="text-2xl font-semibold">{value}</p>
-      {variation && <p className="text-xs text-gray-500 mt-1">{variation} vs mes anterior</p>}
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-2.5 rounded-xl ${colorClasses[color]}`}>
+          {icon}
+        </div>
+        {variation !== undefined && variation !== null && (
+          <div className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${variation >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+            {variation >= 0 ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+            {Math.abs(variation).toFixed(0)}%
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
+        <h3 className="text-3xl font-bold text-slate-900 tracking-tight">{value}</h3>
+      </div>
     </div>
+  );
+}
+
+function VariationBadge({ value }: { value: number | null }) {
+  if (value === null) return <span className="text-slate-400">—</span>;
+
+  const isPositive = value > 0;
+  const isNeutral = value === 0;
+
+  if (isNeutral) return <span className="text-slate-500">0%</span>;
+
+  return (
+    <span className={`inline-flex items-center ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+      {isPositive ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+      {Math.abs(value).toFixed(1)}%
+    </span>
   );
 }

@@ -10,7 +10,7 @@ const VOICE_FEMALE_ID = "3fac0e13ef4d42c0a30bc20e524ae43d";
 const VOICE_MALE_ID = "ec36396594a24ed182d6849ba0ea94b1";
 
 // Webhooks for Synthesia flow
-const WEBHOOK_VALIDATE_SYNTHESIA = 'https://n8n.icc-e.org/webhook-test/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
+const WEBHOOK_VALIDATE_SYNTHESIA = 'https://n8n.icc-e.org/webhook/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
 const WEBHOOK_ACCEPT_VIDEO = 'https://n8n.icc-e.org/webhook-test/01669e58-6bf2-430e-87ee-4493e55e0039';
 const WEBHOOK_REGENERATE_SCRIPT = '/webhook/7fe6fe12-9bd7-40c0-98b4-c6b8c4c3a13a';
 
@@ -52,6 +52,12 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [editedValidation, setEditedValidation] = useState('');
   const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
   const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
+
+  // State for HeyGen validation response
+  const [heyGenValidation, setHeyGenValidation] = useState<{blocked: boolean, violations: string[], suggestion: string, message: string} | null>(null);
+
+  // State for Synthesia validation response
+  const [synthesiaValidation, setSynthesiaValidation] = useState<{blocked: boolean, violations: string[], suggestion: string, message: string} | null>(null);
 
   const { handleError } = useErrorHandler('avatar-video-generation');
   const { showError } = useGlobalError();
@@ -121,9 +127,11 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
     console.log('Enviando datos al webhook de video con HeyGen:', formData);
     setIsGeneratingHeyGen(true);
+    setHeyGenValidation(null); // Reset previous validation
+    setGeneratedMessage(null); // Reset previous message
 
     try {
-      const response = await fetch(API_CONFIG.getFullUrl(API_CONFIG.ENDPOINTS.AVATAR_VIDEO_GENERATION), {
+      const response = await fetch('https://n8n.icc-e.org/webhook/ed67a2f2-5e82-4f96-9282-e63fbeb48bfe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,34 +142,15 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
       console.log('Respuesta del webhook de video con HeyGen:', response.status, response.statusText);
 
       if (response.ok) {
-        try {
-          const result = await response.json();
-          console.log('Video con avatar generado exitosamente:', result);
+        const result = await response.json();
+        console.log('Validación HeyGen recibida:', result);
 
-          // Extraer el mensaje del bot_response
-          const message = result.data?.bot_response;
-          if (message) {
-            setGeneratedMessage(message);
-          } else {
-            handleError(new Error('Video con avatar generado, pero no se pudo obtener el mensaje'));
-            showError();
-          }
-        } catch (jsonError) {
-          console.error('Error al parsear JSON:', jsonError);
-          // Si no es JSON válido, intentar obtener como texto plano
-          const textResponse = await response.text();
-          console.log('Respuesta como texto:', textResponse);
-          if (textResponse) {
-            setGeneratedMessage(textResponse);
-          } else {
-            handleError(new Error('Video con avatar generado, pero la respuesta no es válida'));
-            showError();
-          }
-        }
+        // Set the validation result
+        setHeyGenValidation(result);
       } else {
         const errorText = await response.text();
-        console.error('Error al generar el video con avatar:', response.statusText, errorText);
-        handleError(new Error(`Error al generar el video con avatar: ${response.statusText}`));
+        console.error('Error al validar con HeyGen:', response.statusText, errorText);
+        handleError(new Error(`Error al validar con HeyGen: ${response.statusText}`));
         showError();
       }
     } catch (error) {
@@ -187,7 +176,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
 
     console.log('Enviando datos al webhook de video con Synthesia:', formData);
     setIsGeneratingSynthesia(true);
-    setSynthesiaPreview(null); // Reset preview
+    setSynthesiaValidation(null); // Reset validation
     setGeneratedMessage(null); // Reset message
 
     try {
@@ -217,30 +206,47 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           const result = JSON.parse(responseText);
           console.log('JSON parseado de Synthesia:', result);
 
-          // Check if the response has the expected structure with title, description, script
-          if (result.ok && result.data && result.data.title && result.data.description && result.data.script) {
-            // Show preview instead of generating video directly
-            setSynthesiaPreview(result);
-            setEditedValidation(result.data.script);
-            console.log('Vista previa de Synthesia configurada:', result);
-          } else if (result.data?.bot_response) {
-            // Fallback to old behavior if response has bot_response
-            setGeneratedMessage(result.data.bot_response);
-          } else if (result.message) {
-            // Handle simple message response
-            setGeneratedMessage(result.message);
+          let blocked = !result.ok;
+          let violations: string[] = [];
+          let suggestion = '';
+          let message = '';
+
+          if (result.ok && result.data) {
+            blocked = false;
+            suggestion = result.data.title || '';
+            message = result.data.description || '';
+            violations = [];
           } else {
-            // Try to show whatever we got as preview if it has some structure
-            console.log('Estructura de respuesta no reconocida:', result);
-            if (typeof result === 'object' && result !== null) {
-              setSynthesiaPreview(result);
+            message = result.message || result.data?.bot_response || 'El contenido no cumple con las restricciones.';
+            if (message.includes('cumple con las normas')) {
+              blocked = false;
+              violations = [];
+              suggestion = '';
             } else {
-              setGeneratedMessage(JSON.stringify(result));
+              blocked = true;
+              // Parse message for violations and suggestion
+              const suggestionIndex = message.indexOf('Sugerencia de corrección:');
+              if (suggestionIndex !== -1) {
+                const normsPart = message.substring(message.indexOf('Tu idea incumple las siguientes normas: ') + 'Tu idea incumple las siguientes normas: '.length, suggestionIndex).trim();
+                const suggestionPart = message.substring(suggestionIndex + 'Sugerencia de corrección: '.length).trim();
+                const normItems = normsPart.split(' - ').filter(p => p.trim());
+                violations = normItems.map(p => 'Desinformación: ' + p.trim());
+                suggestion = suggestionPart;
+              } else {
+                violations = ['Contenido no válido'];
+                suggestion = '';
+              }
             }
           }
+
+          setSynthesiaValidation({
+            blocked,
+            violations,
+            suggestion,
+            message
+          });
         } catch (jsonError) {
           console.error('Error al parsear JSON:', jsonError);
-          // If not valid JSON, show as message
           setGeneratedMessage(responseText);
         }
       } else {
@@ -567,7 +573,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
             <button
               onClick={handleGenerateVideoWithSynthesia}
               disabled={isGeneratingSynthesia}
-              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isGeneratingSynthesia ? (
                 <>
@@ -591,46 +597,90 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
             </button>
           </div>
 
-
-
-          {/* Synthesia Preview Section */}
-          {synthesiaPreview && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <h4 className="font-medium text-purple-800 mb-3 flex items-center">
-                <FileText className="w-4 h-4 mr-2" />
-                Vista previa del contenido generado
+          {/* HeyGen Validation Section */}
+          {heyGenValidation && (
+            <div className={`border rounded-lg p-4 ${heyGenValidation.blocked ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+              <h4 className={`font-medium mb-3 flex items-center ${heyGenValidation.blocked ? 'text-red-800' : 'text-green-800'}`}>
+                <Check className="w-4 h-4 mr-2" />
+                Resultado de validación HeyGen
               </h4>
 
-              <div className="bg-white p-4 rounded-lg border border-purple-100">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Validación o sugerencia de edición de la idea:</label>
-                  <textarea
-                    value={editedValidation}
-                    onChange={(e) => setEditedValidation(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px] max-h-48 overflow-y-auto whitespace-pre-wrap"
-                  />
-                </div>
-              </div>
+              <div className="space-y-3">
+                {heyGenValidation.blocked && (
+                  <div className="text-red-700">
+                    <strong>Estado:</strong> Contenido bloqueado
+                  </div>
+                )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                <button
-                  onClick={handleAcceptAndGenerateVideo}
-                  disabled={isAcceptingVideo}
-                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {isAcceptingVideo ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Aceptar y generar video
-                    </>
-                  )}
-                </button>
+                {heyGenValidation.violations && heyGenValidation.violations.length > 0 && (
+                  <div>
+                    <p className="font-medium text-gray-800">Violaciones detectadas:</p>
+                    <ul className="list-disc list-inside text-sm text-gray-700 mt-1 space-y-1">
+                      {heyGenValidation.violations.map((violation, index) => (
+                        <li key={index}>{violation}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {heyGenValidation.suggestion && (
+                  <div>
+                    <p className="font-medium text-gray-800">Sugerencia de corrección:</p>
+                    <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded border">{heyGenValidation.suggestion}</p>
+                  </div>
+                )}
+
+                {heyGenValidation.message && (
+                  <div>
+                    <p className="font-medium text-gray-800">Mensaje:</p>
+                    <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded border">{heyGenValidation.message}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Synthesia Validation Section */}
+          {synthesiaValidation && (
+            <div className={`border rounded-lg p-4 ${synthesiaValidation.blocked ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+              <h4 className={`font-medium mb-3 flex items-center ${synthesiaValidation.blocked ? 'text-red-800' : 'text-green-800'}`}>
+                <Check className="w-4 h-4 mr-2" />
+                Resultado de validación Synthesia
+              </h4>
+
+              <div className="space-y-3">
+                {synthesiaValidation.blocked && (
+                  <>
+                    <div className="text-red-700">
+                      <strong>Estado:</strong> Contenido bloqueado
+                    </div>
+
+                    {synthesiaValidation.violations && synthesiaValidation.violations.length > 0 && (
+                      <div>
+                        <p className="font-medium text-gray-800">Violaciones detectadas:</p>
+                        <ul className="list-disc list-inside text-sm text-gray-700 mt-1 space-y-1">
+                          {synthesiaValidation.violations.map((violation, index) => (
+                            <li key={index}>{violation}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {synthesiaValidation.suggestion && (
+                      <div>
+                        <p className="font-medium text-gray-800">Sugerencia de corrección:</p>
+                        <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded border">{synthesiaValidation.suggestion}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {synthesiaValidation.message && (
+                  <div>
+                    <p className="font-medium text-gray-800">Mensaje:</p>
+                    <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded border">{synthesiaValidation.message}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

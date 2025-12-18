@@ -1153,8 +1153,8 @@ const UDLPChatInterface = () => {
               </div>
             )}
             
-            <div className={`whitespace-pre-line text-sm text-gray-700 ${item.format.toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
-              {item.content}
+            <div className={`whitespace-pre-line text-sm text-gray-700 ${(item.format as string).toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
+              {item.content as string}
             </div>
 
             {/* Texto con enlace clickeable para acceder al audio si existe */}
@@ -1388,12 +1388,18 @@ const UDLPChatInterface = () => {
                     {message.showContentForm && <ContentForm initialData={message.formData} />}
                     
                     {message.showActions && (
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-5 gap-2">
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-6 gap-2">
                         <button
                           onClick={() => handleAction('approve')}
                           className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-sm font-medium text-green-700 border border-green-200"
                         >
                           ✅ Aprobar y usar
+                        </button>
+                        <button
+                          onClick={() => setShowPublishModal(true)}
+                          className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium text-blue-700 border border-blue-200"
+                        >
+                          📢 Publicar contenido
                         </button>
                         <button
                           onClick={() => {
