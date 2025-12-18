@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { MessageSquare, Loader2, Play, Pause, Lightbulb, History } from 'lucide-react';
 import { API_CONFIG } from './config/api';
 import ImageGenerationModal from './components/image-generator/ImageGenerationModal';
@@ -74,7 +76,7 @@ const UDLPChatInterface = () => {
       showForm: true
     }
   ]);
-  
+
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['Español']);
@@ -92,7 +94,7 @@ const UDLPChatInterface = () => {
   const [showVersionHistoryModal, setShowVersionHistoryModal] = useState<boolean>(false);
   const [showContentDetailsModal, setShowContentDetailsModal] = useState<boolean>(false);
   const [selectedContentDetails, setSelectedContentDetails] = useState<RecentContentType | null>(null);
-  const [lastFormData, setLastFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number} | null>(null);
+  const [lastFormData, setLastFormData] = useState<{ tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number } | null>(null);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
 
@@ -100,7 +102,7 @@ const UDLPChatInterface = () => {
 
   const languages = ['Español', 'English', 'Deutsch', 'Français', 'العربية'];
   const areas = [
-    'Abonados', 'Cantera', 'Creative', 'Escuela', 'eSports', 
+    'Abonados', 'Cantera', 'Creative', 'Escuela', 'eSports',
     'Fundación UD', 'Hospitality', 'Infraestructuras', 'Internacional', 'Marketing'
   ];
   const formats = [
@@ -137,8 +139,8 @@ const UDLPChatInterface = () => {
     'Instituciones deportivas'
   ];
 
-  const filteredContents = contentFilter === 'Todos' 
-    ? recentContents 
+  const filteredContents = contentFilter === 'Todos'
+    ? recentContents
     : recentContents.filter(content => content.format === contentFilter);
 
   useEffect(() => {
@@ -166,7 +168,7 @@ const UDLPChatInterface = () => {
             contentId: record.session_id,
             description: sessionData?.details?.mensaje || message.details?.mensaje || ''
           };
-        });
+        }).filter(content => content.topic !== 'Sin título');
         setRecentContents(mappedContents);
       } catch (error) {
         console.error('Error loading recent contents:', error);
@@ -193,7 +195,7 @@ const UDLPChatInterface = () => {
       error: message.error || false,
       ...message
     };
-    
+
     setMessages(prev => [...prev, newMessage]);
   };
 
@@ -235,7 +237,8 @@ const UDLPChatInterface = () => {
 
   const handleSubmit = () => {
     if (!selectedArea || selectedFormats.length === 0 || selectedLanguages.length === 0) {
-      // Manejar el error sin alert
+      // Manejar el error con toast
+      toast.error('Por favor, selecciona un área, al menos un formato y un idioma para continuar.');
       addMessage({
         type: 'bot',
         content: 'Por favor, selecciona un área, al menos un formato y un idioma para continuar.',
@@ -315,10 +318,10 @@ const UDLPChatInterface = () => {
       // Si es una vista previa, mostrar el guion en el chat
       if (isPreview) {
         setMessages(prev => prev.slice(0, -1)); // Eliminar el mensaje de carga
-        
+
         // Obtener el guion de la respuesta, manejando diferentes formatos
         let scriptContent = 'No se pudo generar el guion';
-        
+
         if (typeof responseData === 'string') {
           scriptContent = responseData;
         } else if (typeof responseData.data?.bot_response === 'string') {
@@ -331,7 +334,7 @@ const UDLPChatInterface = () => {
             scriptContent = 'Formato de respuesta no reconocido';
           }
         }
-        
+
         // Mostrar el guion en el chat
         addMessage({
           type: 'bot',
@@ -343,7 +346,7 @@ const UDLPChatInterface = () => {
           }],
           showActions: false
         });
-        
+
         return scriptContent;
       }
 
@@ -356,7 +359,7 @@ const UDLPChatInterface = () => {
         });
         return;
       }
-      
+
       // Buscar el audio en múltiples ubicaciones posibles
       const audioBase64 =
         responseData.audio_base64 ||
@@ -407,7 +410,7 @@ const UDLPChatInterface = () => {
         };
         setRecentContents(prev => [newContent, ...prev.slice(0, 3)]);
       }
-      
+
     } catch (error) {
       console.error('Error al generar el podcast:', error);
       setMessages(prev => {
@@ -425,7 +428,7 @@ const UDLPChatInterface = () => {
     }
   };
 
-  const handleContentSubmit = async (formData: {tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number;}) => {
+  const handleContentSubmit = async (formData: { tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number; }) => {
     const summary = Object.entries(formData)
       .filter(([, value]) => {
         if (value === undefined || value === null) return false;
@@ -443,14 +446,14 @@ const UDLPChatInterface = () => {
         return `${labels[field] || field}: ${String(value)}`;
       })
       .join('\n');
-    
-    addMessage({ 
-      type: 'user', 
+
+    addMessage({
+      type: 'user',
       content: `Detalles:\n${summary}`,
       formData: { ...formData } // Guardar los datos del formulario
     });
     setLastFormData(formData);
-    
+
     setIsGenerating(true);
     addMessage({
       type: 'bot',
@@ -484,7 +487,7 @@ const UDLPChatInterface = () => {
 
       // 2. Obtener la respuesta del webhook
       const responseData = await response.json();
-      
+
       // 3. Verificar que la respuesta tenga el formato esperado
       if (!responseData?.ok || !responseData.data?.bot_response) {
         console.error('Formato de respuesta inesperado:', responseData);
@@ -506,8 +509,8 @@ const UDLPChatInterface = () => {
       }
 
       // 4. Formatear la respuesta para que coincida con lo que espera la interfaz
-      const selectedFormatLabel = selectedFormats.length === 1 
-        ? selectedFormats[0] 
+      const selectedFormatLabel = selectedFormats.length === 1
+        ? selectedFormats[0]
         : selectedFormats.join(', ');
       const generatedContent = [{
         format: selectedFormatLabel,
@@ -684,7 +687,7 @@ const UDLPChatInterface = () => {
     }
   };
 
-  
+
 
   const handleListenAudio = async (scriptText: string) => {
     try {
@@ -874,15 +877,15 @@ const UDLPChatInterface = () => {
 
       <button
         onClick={handleSubmit}
-        className="w-full bg-udlp-yellow text-udlp-dark py-2 px-4 rounded-lg hover:bg-yellow-400 font-medium"
+        className="w-full bg-udlp-yellow-gradient text-udlp-dark py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-300 font-medium"
       >
         Continuar
       </button>
     </div>
   );
 
-  const ContentForm: React.FC<{ initialData?: {tema: string; mensaje: string; contexto: string; audiencia: string;} }> = ({ initialData }) => {
-    const [formData, setFormData] = useState<{tema: string; mensaje: string; contexto: string; audiencia: string;}>({
+  const ContentForm: React.FC<{ initialData?: { tema: string; mensaje: string; contexto: string; audiencia: string; } }> = ({ initialData }) => {
+    const [formData, setFormData] = useState<{ tema: string; mensaje: string; contexto: string; audiencia: string; }>({
       tema: initialData?.tema || '',
       mensaje: initialData?.mensaje || '',
       contexto: initialData?.contexto || '',
@@ -1026,7 +1029,7 @@ const UDLPChatInterface = () => {
           <button
             onClick={() => handleContentSubmit({ ...formData, wordCount: selectedFormats.includes('Nota de prensa') ? wordCount : undefined })}
             disabled={!isValid || isGenerating}
-            className="w-full bg-udlp-yellow text-udlp-dark py-2 px-4 rounded-lg hover:bg-yellow-400 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-udlp-yellow-gradient text-udlp-dark py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-300 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isGenerating ? (
               <>
@@ -1042,10 +1045,10 @@ const UDLPChatInterface = () => {
     );
   };
 
-  const GeneratedContent: React.FC<{content: GeneratedContentType[]}> = ({ content }) => {
-    const [isPlaying, setIsPlaying] = useState<{[key: number]: boolean}>({});
-    const audioRefs = useRef<{[key: number]: HTMLAudioElement | null}>({});
-    
+  const GeneratedContent: React.FC<{ content: GeneratedContentType[] }> = ({ content }) => {
+    const [isPlaying, setIsPlaying] = useState<{ [key: number]: boolean }>({});
+    const audioRefs = useRef<{ [key: number]: HTMLAudioElement | null }>({});
+
     // Función para manejar la referencia del audio
     const setAudioRef = (index: number) => (el: HTMLAudioElement | null) => {
       if (el) {
@@ -1064,22 +1067,22 @@ const UDLPChatInterface = () => {
         Object.entries(audioRefs.current).forEach(([i, a]) => {
           if (a && parseInt(i) !== index) {
             a.pause();
-            setIsPlaying(prev => ({...prev, [i]: false}));
+            setIsPlaying(prev => ({ ...prev, [i]: false }));
           }
         });
         audio.play().catch(error => {
           console.error('Error al reproducir el audio:', error);
         });
       }
-      setIsPlaying(prev => ({...prev, [index]: !prev[index]}));
+      setIsPlaying(prev => ({ ...prev, [index]: !prev[index] }));
     };
 
     // Efecto para manejar eventos de finalización de audio
     useEffect(() => {
       const currentAudioRefs = audioRefs.current;
-      
+
       const handleEnded = (index: number) => {
-        setIsPlaying(prev => ({...prev, [index]: false}));
+        setIsPlaying(prev => ({ ...prev, [index]: false }));
       };
 
       // Agregar event listeners
@@ -1109,18 +1112,17 @@ const UDLPChatInterface = () => {
                 {item.format}
               </span>
             </div>
-            
+
             {/* Reproductor de audio si hay una URL de audio */}
             {'audioUrl' in item && item.audioUrl && (
               <div className="mb-3 p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleAudio(index)}
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                      isPlaying[index] 
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                        : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                    } transition-colors`}
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isPlaying[index]
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                      : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                      } transition-colors`}
                   >
                     {isPlaying[index] ? (
                       <Pause className="w-5 h-5" />
@@ -1128,31 +1130,31 @@ const UDLPChatInterface = () => {
                       <Play className="w-5 h-5" />
                     )}
                   </button>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-700 truncate">
                       {isPlaying[index] ? 'Reproduciendo...' : 'Audio disponible'}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                      <div 
+                      <div
                         className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
                         style={{ width: isPlaying[index] ? '100%' : '0%' }}
                       />
                     </div>
                   </div>
-                  
+
                   <audio
                     ref={setAudioRef(index)}
                     src={item.audioUrl}
                     className="hidden"
                     onEnded={() => {
-                      setIsPlaying(prev => ({...prev, [index]: false}));
+                      setIsPlaying(prev => ({ ...prev, [index]: false }));
                     }}
                   />
                 </div>
               </div>
             )}
-            
+
             <div className={`whitespace-pre-line text-sm text-gray-700 ${(item.format as string).toLowerCase().includes('nota de prensa') ? 'text-left' : ''}`}>
               {item.content as string}
             </div>
@@ -1181,350 +1183,359 @@ const UDLPChatInterface = () => {
 
   return (
     <>
-    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans">
-      <div className="w-full md:w-80 bg-white shadow-lg flex-shrink-0">
-        <div className="p-6 bg-udlp-blue text-white">
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-2 rounded">
-              <span className="text-udlp-blue font-bold text-lg">UD</span>
+      <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans">
+        <div className="w-full md:w-80 glass-panel shadow-lg flex-shrink-0 border-r border-white/20">
+          <div className="p-6 bg-udlp-blue text-white">
+            <div className="flex items-center gap-3">
+              <div className="bg-white p-2 rounded">
+                <span className="text-udlp-blue font-bold text-lg">UD</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-udlp-yellow">UD LAS PALMAS</h1>
+                <p className="text-sm opacity-90">Centro comunicación inteligente</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-udlp-yellow">UD LAS PALMAS</h1>
-              <p className="text-sm opacity-90">Centro comunicación inteligente</p>
+          </div>
+
+          <div className="p-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-900">Últimos contenidos creados</h3>
+
+                <select
+                  className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                  value={contentFilter}
+                  onChange={(e) => setContentFilter(e.target.value)}
+                >
+                  {contentTypeOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+
+                <div className="space-y-3">
+                  {loadingRecentContents ? (
+                    <div className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
+                      <div className="text-sm text-gray-600">Cargando contenidos recientes...</div>
+                    </div>
+                  ) : filteredContents.length === 0 ? (
+                    <div className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
+                      <div className="text-sm text-gray-600">No hay contenidos recientes</div>
+                    </div>
+                  ) : (
+                    filteredContents.map((content, index) => (
+                      <div key={index} className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
+                        <div className="font-medium text-sm text-gray-900">{content.topic}</div>
+                        {content.description && (
+                          <div className="text-xs text-gray-700 mt-1 italic">{content.description}</div>
+                        )}
+                        <div className="text-xs text-gray-600 mt-1">
+                          <div>{content.area}</div>
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="bg-udlp-blue text-white px-2 py-1 rounded text-xs">
+                              {content.format}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span>{content.time}</span>
+                              <button
+                                onClick={() => {
+                                  setSelectedContentDetails(content);
+                                  setShowContentDetailsModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-xs underline"
+                              >
+                                Ver detalles
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-2">
+                    <span>Suministrado por</span>
+                    <div className="bg-udlp-dark text-white px-2 py-1 font-bold rounded-sm">
+                      <div>ICC</div>
+                      <div>SPORTS</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => window.open('https://t.me/icc_sports_support_bot', '_blank')}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    🤖 Reportar problema o sugerir mejora
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        
-        <div className="p-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h3 className="font-semibold text-gray-900">Últimos contenidos creados</h3>
-              
-              <select
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                value={contentFilter}
-                onChange={(e) => setContentFilter(e.target.value)}
-              >
-                {contentTypeOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              
-              <div className="space-y-3">
-                {loadingRecentContents ? (
-                  <div className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
-                    <div className="text-sm text-gray-600">Cargando contenidos recientes...</div>
-                  </div>
-                ) : filteredContents.length === 0 ? (
-                  <div className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
-                    <div className="text-sm text-gray-600">No hay contenidos recientes</div>
-                  </div>
-                ) : (
-                  filteredContents.map((content, index) => (
-                    <div key={index} className="p-3 bg-udlp-gray rounded-lg border shadow-udlp">
-                      <div className="font-medium text-sm text-gray-900">{content.topic}</div>
-                      {content.description && (
-                        <div className="text-xs text-gray-700 mt-1 italic">{content.description}</div>
-                      )}
-                      <div className="text-xs text-gray-600 mt-1">
-                        <div>{content.area}</div>
-                        <div className="flex justify-between items-center mt-1">
-                          <span className="bg-udlp-blue text-white px-2 py-1 rounded text-xs">
-                            {content.format}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span>{content.time}</span>
+
+        <div className="flex-1 flex flex-col">
+          <div className="bg-white shadow-sm p-4 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="text-udlp-yellow" size={24} />
+                <div>
+                  <h2 className="font-semibold text-gray-900">Pío, asistente de comunicación con IA, v70</h2>
+                  <p className="text-sm text-gray-600">Especializado en cada área del club</p>
+                </div>
+              </div>
+              <div className="text-right flex flex-col items-end gap-2">
+                <button
+                  onClick={() => setShowFormExamplesModal(true)}
+                  className="px-3 py-1 bg-udlp-yellow text-udlp-dark rounded-lg hover:bg-yellow-400 text-sm font-medium"
+                >
+                  Aprender con Ejemplos
+                </button>
+                <div>
+                  <div className="font-medium text-sm text-gray-900">Francisco Ortiz</div>
+                  <div className="text-xs text-gray-600">innovacion.fundacion@udlaspalmas.es</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <AnimatePresence mode="popLayout">
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-4xl ${message.type === 'user' ? 'bg-udlp-yellow text-udlp-dark' : 'bg-white border border-gray-200'} rounded-xl p-4 shadow-sm`}>
+                    {message.loading && (
+                      <div className="flex items-center gap-2">
+                        <Loader2 size={16} className="animate-spin text-udlp-yellow" />
+                        <span>Generando contenido...</span>
+                      </div>
+                    )}
+
+                    {!message.loading && (
+                      <>
+                        <div className="whitespace-pre-line">{message.content}</div>
+
+                        {message.generatedContent && (
+                          <GeneratedContent content={message.generatedContent} />
+                        )}
+
+                        {message.isEditing && message.generatedContent && Array.isArray(message.editedContents) && (
+                          <div className="mt-4 space-y-4">
+                            {message.generatedContent.map((item, index) => (
+                              <div key={index} className="border rounded-lg p-4 bg-white">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-semibold text-blue-600">{item.title}</h4>
+                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                    {item.format}
+                                  </span>
+                                </div>
+                                <textarea
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
+                                  rows={8}
+                                  value={message.editedContents?.[index] ?? ''}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    setMessages(prev => prev.map(m => {
+                                      if (m.id !== message.id) return m;
+                                      const updated = m.editedContents ? [...m.editedContents] : [];
+                                      updated[index] = value;
+                                      return { ...m, editedContents: updated };
+                                    }));
+                                  }}
+                                />
+                              </div>
+                            ))}
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setMessages(prev => prev.map(m => {
+                                    if (m.id !== message.id) return m;
+                                    if (!m.generatedContent || !m.editedContents) return m;
+                                    const updatedGenerated = m.generatedContent.map((g, i) => ({
+                                      ...g,
+                                      content: m.editedContents![i]
+                                    }));
+                                    return { ...m, generatedContent: updatedGenerated, isEditing: false };
+                                  }));
+                                }}
+                                className="p-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
+                              >
+                                💾 Guardar cambios
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setMessages(prev => prev.map(m => m.id === message.id ? { ...m, isEditing: false } : m));
+                                }}
+                                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"
+                              >
+                                ✖️ Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {message.success && (
+                          <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <span className="text-green-700 font-medium">¡Contenido aprobado!</span>
+                          </div>
+                        )}
+
+                        {message.error && (
+                          <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                            <span className="text-red-700 font-medium">Error al generar contenido</span>
+                          </div>
+                        )}
+
+                        {message.showForm && <InitialForm />}
+                        {message.showContentForm && <ContentForm initialData={message.formData} />}
+
+                        {message.showActions && (
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-6 gap-2">
+                            <button
+                              onClick={() => handleAction('approve')}
+                              className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-sm font-medium text-green-700 border border-green-200"
+                            >
+                              ✅ Aprobar y usar
+                            </button>
+                            <button
+                              onClick={() => setShowPublishModal(true)}
+                              className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium text-blue-700 border border-blue-200"
+                            >
+                              📢 Publicar contenido
+                            </button>
                             <button
                               onClick={() => {
-                                setSelectedContentDetails(content);
-                                setShowContentDetailsModal(true);
+                                // activar modo conversacional de refinado
+                                setRefinePrompt('');
+                                addMessage({ type: 'user', content: '✏️ Editar contenido (modo conversacional activado)' });
+                                addMessage({ type: 'bot', content: 'Indícame cómo quieres editar o mejorar el contenido. Por ejemplo: "reduce tono formal" o "agrega un párrafo sobre impacto social".' });
                               }}
-                              className="text-blue-600 hover:text-blue-800 text-xs underline"
+                              className="p-3 bg-udlp-gradient hover:shadow-lg transition-all duration-300 rounded-lg text-sm font-medium text-white border border-udlp-blue"
                             >
-                              Ver detalles
+                              ✏️ Editar contenido
                             </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-2">
-                  <span>Suministrado por</span>
-                  <div className="bg-udlp-dark text-white px-2 py-1 font-bold rounded-sm">
-                    <div>ICC</div>
-                    <div>SPORTS</div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => window.open('https://t.me/icc_sports_support_bot', '_blank')}
-                  className="text-xs text-blue-600 hover:text-blue-800 underline"
-                >
-                  🤖 Reportar problema o sugerir mejora
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col">
-        <div className="bg-white shadow-sm p-4 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="text-udlp-yellow" size={24} />
-              <div>
-                <h2 className="font-semibold text-gray-900">Pío, asistente de comunicación con IA, v70</h2>
-                <p className="text-sm text-gray-600">Especializado en cada área del club</p>
-              </div>
-            </div>
-            <div className="text-right flex flex-col items-end gap-2">
-              <button
-                onClick={() => setShowFormExamplesModal(true)}
-                className="px-3 py-1 bg-udlp-yellow text-udlp-dark rounded-lg hover:bg-yellow-400 text-sm font-medium"
-              >
-                Aprender con Ejemplos
-              </button>
-              <div>
-                <div className="font-medium text-sm text-gray-900">Francisco Ortiz</div>
-                <div className="text-xs text-gray-600">innovacion.fundacion@udlaspalmas.es</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-4xl ${message.type === 'user' ? 'bg-udlp-yellow text-udlp-dark' : 'bg-white border border-gray-200'} rounded-xl p-4 shadow-sm`}>
-                {message.loading && (
-                  <div className="flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-udlp-yellow" />
-                    <span>Generando contenido...</span>
-                  </div>
-                )}
-                
-                {!message.loading && (
-                  <>
-                    <div className="whitespace-pre-line">{message.content}</div>
-                    
-                    {message.generatedContent && (
-                      <GeneratedContent content={message.generatedContent} />
-                    )}
-
-                    {message.isEditing && message.generatedContent && Array.isArray(message.editedContents) && (
-                      <div className="mt-4 space-y-4">
-                        {message.generatedContent.map((item, index) => (
-                          <div key={index} className="border rounded-lg p-4 bg-white">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-blue-600">{item.title}</h4>
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                {item.format}
-                              </span>
-                            </div>
-                            <textarea
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
-                              rows={8}
-                              value={message.editedContents?.[index] ?? ''}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                setMessages(prev => prev.map(m => {
-                                  if (m.id !== message.id) return m;
-                                  const updated = m.editedContents ? [...m.editedContents] : [];
-                                  updated[index] = value;
-                                  return { ...m, editedContents: updated };
-                                }));
-                              }}
-                            />
-                          </div>
-                        ))}
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setMessages(prev => prev.map(m => {
-                                if (m.id !== message.id) return m;
-                                if (!m.generatedContent || !m.editedContents) return m;
-                                const updatedGenerated = m.generatedContent.map((g, i) => ({
-                                  ...g,
-                                  content: m.editedContents![i]
-                                }));
-                                return { ...m, generatedContent: updatedGenerated, isEditing: false };
-                              }));
-                            }}
-                            className="p-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
-                          >
-                            💾 Guardar cambios
-                          </button>
-                          <button
-                            onClick={() => {
-                              setMessages(prev => prev.map(m => m.id === message.id ? { ...m, isEditing: false } : m));
-                            }}
-                            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"
-                          >
-                            ✖️ Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {message.success && (
-                      <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                        <span className="text-green-700 font-medium">¡Contenido aprobado!</span>
-                      </div>
-                    )}
-                    
-                    {message.error && (
-                      <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                        <span className="text-red-700 font-medium">Error al generar contenido</span>
-                      </div>
-                    )}
-                    
-                    {message.showForm && <InitialForm />}
-                    {message.showContentForm && <ContentForm initialData={message.formData} />}
-                    
-                    {message.showActions && (
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-6 gap-2">
-                        <button
-                          onClick={() => handleAction('approve')}
-                          className="p-3 bg-green-50 hover:bg-green-100 rounded-lg text-sm font-medium text-green-700 border border-green-200"
-                        >
-                          ✅ Aprobar y usar
-                        </button>
-                        <button
-                          onClick={() => setShowPublishModal(true)}
-                          className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium text-blue-700 border border-blue-200"
-                        >
-                          📢 Publicar contenido
-                        </button>
-                        <button
-                          onClick={() => {
-                            // activar modo conversacional de refinado
-                            setRefinePrompt('');
-                            addMessage({ type: 'user', content: '✏️ Editar contenido (modo conversacional activado)' });
-                            addMessage({ type: 'bot', content: 'Indícame cómo quieres editar o mejorar el contenido. Por ejemplo: "reduce tono formal" o "agrega un párrafo sobre impacto social".' });
-                          }}
-                          className="p-3 bg-udlp-blue hover:bg-blue-700 rounded-lg text-sm font-medium text-white border border-udlp-blue"
-                        >
-                          ✏️ Editar contenido
-                        </button>
-                        {message.generatedContent && message.generatedContent.some(item => item.format.toLowerCase().includes('audio') || item.format.toLowerCase().includes('podcast')) && (
-                          <button
-                            onClick={() => {
-                              // Obtener el texto del guion del contenido generado
-                              const scriptItem = message.generatedContent!.find(item =>
-                                item.format.toLowerCase().includes('audio') ||
-                                item.format.toLowerCase().includes('podcast')
-                              );
-                              if (scriptItem && scriptItem.content) {
-                                handleListenAudio(scriptItem.content);
-                              }
-                            }}
-                            className="p-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium text-white"
-                          >
-                            🎧 Escuchar
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setShowImageModal(true)}
-                          className="p-3 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
-                        >
-                          🖼️ Crear imagen
-                        </button>
-                        <button
-                          onClick={() => setShowVersionHistoryModal(true)}
-                          className="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white"
-                        >
-                          📚 Ver historial
-                        </button>
-                        <button
-                          onClick={() => handleAction('new')}
-                          className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"
-                        >
-                          🆕 Crear otro contenido
-                        </button>
-                        {/* Conversational refine UI */}
-                        <div className="sm:col-span-5">
-                          <div className="mt-2 flex flex-col sm:flex-row gap-2">
-                            <input
-                              type="text"
-                              value={refinePrompt}
-                              onChange={(e) => setRefinePrompt(e.target.value)}
-                              placeholder="Escribe aquí tu instrucción para refinar..."
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
-                            />
+                            {message.generatedContent && message.generatedContent.some(item => item.format.toLowerCase().includes('audio') || item.format.toLowerCase().includes('podcast')) && (
+                              <button
+                                onClick={() => {
+                                  // Obtener el texto del guion del contenido generado
+                                  const scriptItem = message.generatedContent!.find(item =>
+                                    item.format.toLowerCase().includes('audio') ||
+                                    item.format.toLowerCase().includes('podcast')
+                                  );
+                                  if (scriptItem && scriptItem.content) {
+                                    handleListenAudio(scriptItem.content);
+                                  }
+                                }}
+                                className="p-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium text-white"
+                              >
+                                🎧 Escuchar
+                              </button>
+                            )}
                             <button
-                              onClick={handleRefineSubmit}
-                              disabled={isGenerating || refinePrompt.trim() === ''}
-                              className="px-4 py-2 bg-udlp-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                              onClick={() => setShowImageModal(true)}
+                              className="p-3 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium text-white"
                             >
-                              ↻ Regenerar
+                              🖼️ Crear imagen
                             </button>
+                            <button
+                              onClick={() => setShowVersionHistoryModal(true)}
+                              className="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white"
+                            >
+                              📚 Ver historial
+                            </button>
+                            <button
+                              onClick={() => handleAction('new')}
+                              className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"
+                            >
+                              🆕 Crear otro contenido
+                            </button>
+                            {/* Conversational refine UI */}
+                            <div className="sm:col-span-5">
+                              <div className="mt-2 flex flex-col sm:flex-row gap-2">
+                                <input
+                                  type="text"
+                                  value={refinePrompt}
+                                  onChange={(e) => setRefinePrompt(e.target.value)}
+                                  placeholder="Escribe aquí tu instrucción para refinar..."
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-udlp-yellow"
+                                />
+                                <button
+                                  onClick={handleRefineSubmit}
+                                  disabled={isGenerating || refinePrompt.trim() === ''}
+                                  className="px-4 py-2 bg-udlp-gradient text-white rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                                >
+                                  ↻ Regenerar
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-                
-                <div className={`text-xs mt-2 ${message.type === 'user' ? 'text-gray-600' : 'text-gray-500'}`}>
-                  {message.timestamp}
-                </div>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+
+                    <div className={`text-xs mt-2 ${message.type === 'user' ? 'text-gray-600' : 'text-gray-500'}`}>
+                      {message.timestamp}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
         </div>
       </div>
-    </div>
-    {showImageModal && (
-      <ImageGenerationModal onClose={() => setShowImageModal(false)} initialData={imagePromptData || undefined} />
-    )}
-    {showAudioModal && (
-      <AudioPodcastModal 
-        onClose={() => setShowAudioModal(false)}
-        onSubmit={handlePodcastSubmit}
-      />
-    )}
-    {showVideoAvatarModal && (
-      <VideoAvatarModal onClose={() => setShowVideoAvatarModal(false)} />
-    )}
-    {showVideoModal && (
-      <VideoGenerationModal onClose={() => setShowVideoModal(false)} />
-    )}
-    {showExamplesModal && (
-      <ExamplesModal
-        area={selectedArea}
-        onClose={() => setShowExamplesModal(false)}
-        onCopyExample={handleCopyExample}
-      />
-    )}
-    {showVersionHistoryModal && (
-      <VersionHistoryModal
-        isOpen={showVersionHistoryModal}
-        onClose={() => setShowVersionHistoryModal(false)}
-        contentId={currentContentId || undefined}
-      />
-    )}
-    {showContentDetailsModal && selectedContentDetails && (
-      <ContentDetailsModal
-        isOpen={showContentDetailsModal}
-        onClose={() => {
-          setShowContentDetailsModal(false);
-          setSelectedContentDetails(null);
-        }}
-        content={selectedContentDetails}
-      />
-    )}
-    {showFormExamplesModal && (
-      <FormExamplesModal onClose={() => setShowFormExamplesModal(false)} />
-    )}
-  </>
-);
+      {showImageModal && (
+        <ImageGenerationModal onClose={() => setShowImageModal(false)} initialData={imagePromptData || undefined} />
+      )}
+      {showAudioModal && (
+        <AudioPodcastModal
+          onClose={() => setShowAudioModal(false)}
+          onSubmit={handlePodcastSubmit}
+        />
+      )}
+      {showVideoAvatarModal && (
+        <VideoAvatarModal onClose={() => setShowVideoAvatarModal(false)} />
+      )}
+      {showVideoModal && (
+        <VideoGenerationModal onClose={() => setShowVideoModal(false)} />
+      )}
+      {showExamplesModal && (
+        <ExamplesModal
+          area={selectedArea}
+          onClose={() => setShowExamplesModal(false)}
+          onCopyExample={handleCopyExample}
+        />
+      )}
+      {showVersionHistoryModal && (
+        <VersionHistoryModal
+          isOpen={showVersionHistoryModal}
+          onClose={() => setShowVersionHistoryModal(false)}
+          contentId={currentContentId || undefined}
+        />
+      )}
+      {showContentDetailsModal && selectedContentDetails && (
+        <ContentDetailsModal
+          isOpen={showContentDetailsModal}
+          onClose={() => {
+            setShowContentDetailsModal(false);
+            setSelectedContentDetails(null);
+          }}
+          content={selectedContentDetails}
+        />
+      )}
+      {showFormExamplesModal && (
+        <FormExamplesModal onClose={() => setShowFormExamplesModal(false)} />
+      )}
+    </>
+  );
 };
 
 export default UDLPChatInterface;

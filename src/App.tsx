@@ -1,5 +1,6 @@
 // Importaciones de React y rutas
 import React from 'react';
+import { Toaster } from 'sonner';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ServiceStatusProvider } from './contexts/ServiceStatusContext';
@@ -143,6 +144,7 @@ function App() {
       <GlobalErrorProvider>
         <AuthProvider>
           <ServiceStatusProvider>
+            <Toaster position="top-right" richColors />
             <AppContent />
           </ServiceStatusProvider>
         </AuthProvider>
