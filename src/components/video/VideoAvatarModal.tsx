@@ -52,6 +52,8 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [editedValidation, setEditedValidation] = useState('');
   const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
   const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
+  const [showHeyGenConfirmationModal, setShowHeyGenConfirmationModal] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   // State for HeyGen validation response
   const [heyGenValidation, setHeyGenValidation] = useState<{blocked: boolean, violations: string[], suggestion: string, message: string} | null>(null);
@@ -477,6 +479,53 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
     }
   };
 
+  // Handler for confirming HeyGen generation
+  const handleConfirmHeyGenGeneration = async () => {
+    const formData = {
+      avatar_id: avatarId,
+      script,
+      selectedLanguage,
+      voice: voiceId,
+      outputFormat,
+      resolution,
+      platform,
+      videoType: 'avatar_heygen',
+      email: userEmail
+    };
+
+    console.log('Enviando datos para generar video con HeyGen:', formData);
+
+    try {
+      const response = await fetch('https://n8n.icc-e.org/webhook-test/7049ac67-d242-4c7d-86d0-6e8d0038b8dd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook de HeyGen:', response.status, response.statusText);
+
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('Respuesta del webhook:', responseText);
+        setGeneratedMessage('Solicitud enviada correctamente. Recibirás el video por email una vez generado.');
+      } else {
+        const errorText = await response.text();
+        console.error('Error al enviar datos:', response.statusText, errorText);
+        handleError(new Error(`Error al enviar datos: ${response.statusText}`));
+        showError();
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      handleError(error);
+      showError();
+    }
+
+    setShowHeyGenConfirmationModal(false);
+    setUserEmail('');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -589,12 +638,20 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
           </div>
 
           <div className="pt-4 border-t border-gray-200">
-            <button
-              onClick={handleSendFormDataToWebhook}
-              className="w-full bg-purple-600 text-white py-3 px-6 rounded-md hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              📤 Enviar datos del formulario
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowHeyGenConfirmationModal(true)}
+                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                🎬 Generar video con HeyGen
+              </button>
+              <button
+                onClick={handleSendFormDataToWebhook}
+                className="flex-1 bg-purple-600 text-white py-3 px-6 rounded-md hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                🎥 Generar video con Synthesia
+              </button>
+            </div>
           </div>
 
           {/* HeyGen Validation Section */}
@@ -838,6 +895,83 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 <p>• No se pueden usar marcas, logos o material protegido sin derechos. Evita usar contenido con copyright o elementos de marcas registradas sin autorización.</p>
                 <p>• No se pueden subir imágenes o recursos visuales que violen derechos de terceros. Nada de fotos privadas, material obtenido sin permiso o imágenes sensibles.</p>
                 <p>• No se pueden generar llamados a acciones dañinas o peligrosas. La plataforma bloquea mensajes que incentiven violencia, vandalismo, discursos extremistas o daño a otros.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HeyGen Confirmation Modal */}
+      {showHeyGenConfirmationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowHeyGenConfirmationModal(false)} />
+          <div className="relative max-w-2xl w-full mx-4 bg-white rounded-2xl shadow-udlp-lg ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Confirmar generación de video con HeyGen
+              </h2>
+              <button
+                onClick={() => setShowHeyGenConfirmationModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                Corrobora los datos antes de enviar. Una vez generado, recibirás el video por email.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Avatar seleccionado</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{avatares.find(a => a.id === selectedAvatar)?.nombre || 'Ninguno'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Script</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded max-h-20 overflow-y-auto">{script || 'Sin script'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedLanguage === 'es' ? 'Español' : selectedLanguage}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Formato</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{outputFormat}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Resolución</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{resolution}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Plataforma</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{plataformas.find(p => p.id === platform)?.nombre || platform}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+                  <input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowHeyGenConfirmationModal(false)}
+                  className="bg-gray-100 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmHeyGenGeneration}
+                  disabled={!userEmail}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Confirmar y enviar
+                </button>
               </div>
             </div>
           </div>
