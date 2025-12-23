@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import type { ReactNode } from 'react';
 import { API_CONFIG, ENV } from '../config/api';
 import type { User, UserRole, AuthResponse } from '../types/auth';
+import { supabase } from '../services/supabaseService';
 
 // Los tipos ahora se importan desde ../types/auth
 
@@ -76,84 +77,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return true;
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
-
-      const url = ENV.IS_DEVELOPMENT ? 'https://n8n.icc-e.org/webhook/login' : `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`;
-      console.log('Login URL:', url);
-      const response = await fetch(url, {
-        method: 'POST',
-        ...API_CONFIG.CORS_CONFIG,
-        headers: {
-          ...API_CONFIG.CORS_CONFIG.headers,
-          'Origin': window.location.origin,
-        },
-        body: JSON.stringify({
-          action: 'login',  // Identificador de acción para el webhook
-          email,
-          password,
-          timestamp: new Date().toISOString()
-        }),
-        signal: controller.signal,
+      // Usar Supabase para autenticación
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      clearTimeout(timeoutId);
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        let errorMessage = `Error en la autenticación: ${response.status} ${response.statusText}`;
-        try {
-          const errorText = await response.text();
-          console.log('Error response text:', errorText);
-          if (errorText.trim()) {
-            const errorData = JSON.parse(errorText);
-            if (errorData.message) {
-              errorMessage = errorData.message;
-            }
-          }
-        } catch (jsonError) {
-          // Si no hay JSON en el error, usar el mensaje por defecto
-          console.warn('No se pudo parsear el error como JSON:', jsonError);
-        }
-        throw new Error(errorMessage);
+      if (error) {
+        throw new Error(error.message);
       }
 
-      let responseData: AuthResponse;
-      try {
-        const responseText = await response.text();
-        console.log('Success response text:', responseText);
-
-        responseData = JSON.parse(responseText);
-      } catch (jsonError) {
-        console.error('Error parsing JSON:', jsonError);
-        throw new Error('La respuesta del servidor no es un JSON válido');
+      if (!data.user) {
+        throw new Error('No se pudo obtener la información del usuario');
       }
 
-      if (!responseData.ok || !responseData.data) {
-        throw new Error(responseData.message || 'Error en la autenticación o datos faltantes');
-      }
-
-      // Mapear la respuesta del servidor al formato de usuario
-      const areaName = responseData.data.area || 'default';
+      // Mapear el usuario de Supabase al formato de usuario personalizado
       const userData: User = {
-        id: responseData.data.id,
-        name: responseData.data.email.split('@')[0],
-        email: responseData.data.email,
-        role: 'user', // Por defecto
-        areas: [{
-          id: 1, // Este ID podría venir del servidor
-          name: areaName,
-          description: `Área de ${areaName}`,
-          knowledgeBaseId: `kb_${areaName.toLowerCase().replace(/\s+/g, '_')}`
+        id: data.user.id,
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario',
+        email: data.user.email || '',
+        role: (data.user.user_metadata?.role as UserRole) || 'user',
+        areas: data.user.user_metadata?.areas || [{
+          id: 1,
+          name: 'Default',
+          description: 'Área por defecto',
+          knowledgeBaseId: 'kb_default'
         }]
       };
 
       // Guardar en localStorage
       const authData = {
         user: userData,
-        token: responseData.token || 'dummy-token',
+        token: data.session?.access_token || 'token',
         timestamp: new Date().getTime()
       };
 
@@ -175,9 +130,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setUser(null);
     localStorage.removeItem('auth');
+    await supabase.auth.signOut();
   }, []);
 
   const hasPermission = useCallback((requiredRole: UserRole): boolean => {
