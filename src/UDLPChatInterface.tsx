@@ -94,6 +94,7 @@ const UDLPChatInterface = () => {
   const [showVersionHistoryModal, setShowVersionHistoryModal] = useState<boolean>(false);
   const [showContentDetailsModal, setShowContentDetailsModal] = useState<boolean>(false);
   const [selectedContentDetails, setSelectedContentDetails] = useState<RecentContentType | null>(null);
+  const [showPublishModal, setShowPublishModal] = useState<boolean>(false);
   const [lastFormData, setLastFormData] = useState<{ tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number } | null>(null);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
@@ -1155,8 +1156,8 @@ const UDLPChatInterface = () => {
               </div>
             )}
 
-            <div className={`whitespace-pre-line text-sm text-gray-700 ${(item.format as string).toLowerCase().includes('nota de prensa') || (item.format as string).toLowerCase().includes('instagram') || (item.format as string).toLowerCase().includes('linkedin') ? 'text-left' : ''}`}>
-              {item.content as string}
+            <div className={`whitespace-pre-line text-sm text-gray-700 ${(item.format as string).toLowerCase().includes('nota de prensa') || (item.format as string).toLowerCase().includes('instagram') || (item.format as string).toLowerCase().includes('linkedin') ? 'text-left' : ''}`.trim()}>
+              {item.content}
             </div>
 
             {/* Texto con enlace clickeable para acceder al audio si existe */}
@@ -1311,7 +1312,7 @@ const UDLPChatInterface = () => {
                   transition={{ duration: 0.3 }}
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-4xl ${message.type === 'user' ? 'bg-udlp-yellow text-udlp-dark' : 'bg-white border border-gray-200'} rounded-xl p-4 shadow-sm`}>
+                  <div className={`max-w-4xl text-left ${message.type === 'user' ? 'bg-udlp-yellow text-udlp-dark' : 'bg-white border border-gray-200'} rounded-xl p-4 shadow-sm`}>
                     {message.loading && (
                       <div className="flex items-center gap-2">
                         <Loader2 size={16} className="animate-spin text-udlp-yellow" />
