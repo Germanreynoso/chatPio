@@ -96,6 +96,7 @@ const UDLPChatInterface = () => {
   const [selectedContentDetails, setSelectedContentDetails] = useState<RecentContentType | null>(null);
   const [showPublishModal, setShowPublishModal] = useState<boolean>(false);
   const [lastFormData, setLastFormData] = useState<{ tema: string; mensaje: string; contexto: string; audiencia: string; wordCount?: number } | null>(null);
+  const [isReusingTemplate, setIsReusingTemplate] = useState<boolean>(false);
   const [refinePrompt, setRefinePrompt] = useState<string>("");
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
 
@@ -270,11 +271,21 @@ const UDLPChatInterface = () => {
     }
 
     setTimeout(() => {
-      addMessage({
-        type: 'bot',
-        content: 'Perfecto! Ahora necesito más detalles sobre el contenido.',
-        showContentForm: true
-      });
+      if (isReusingTemplate) {
+        setIsReusingTemplate(false);
+        addMessage({
+          type: 'bot',
+          content: 'Perfecto! Usando los datos previos para generar contenido en el nuevo formato.',
+          showContentForm: true,
+          formData: lastFormData ?? undefined
+        });
+      } else {
+        addMessage({
+          type: 'bot',
+          content: 'Perfecto! Ahora necesito más detalles sobre el contenido.',
+          showContentForm: true
+        });
+      }
     }, 500);
   };
 
@@ -763,6 +774,18 @@ const UDLPChatInterface = () => {
     }
   };
 
+  const handleReuseTemplate = () => {
+    if (!lastFormData) return;
+    setIsReusingTemplate(true);
+    // Reset formats to allow new selection, keep area and languages
+    setSelectedFormats([]);
+    addMessage({
+      type: 'bot',
+      content: 'Reutilizando plantilla anterior. Selecciona el nuevo formato y confirma:',
+      showForm: true
+    });
+  };
+
   const handleAction = (action: string) => {
     if (action === 'approve') {
       addMessage({ type: 'user', content: '✅ Aprobar y usar' });
@@ -788,6 +811,8 @@ const UDLPChatInterface = () => {
         }
         return newMessages;
       });
+    } else if (action === 'reuse') {
+      handleReuseTemplate();
     } else if (action === 'new') {
       addMessage({ type: 'user', content: '🆕 Crear otro contenido' });
       setTimeout(() => {
@@ -1452,6 +1477,14 @@ const UDLPChatInterface = () => {
                             >
                               📚 Ver historial
                             </button>
+                            {lastFormData && (
+                              <button
+                                onClick={() => handleAction('reuse')}
+                                className="p-3 bg-purple-50 hover:bg-purple-100 rounded-lg text-sm font-medium text-purple-700 border border-purple-200"
+                              >
+                                🔄 Reutilizar plantilla
+                              </button>
+                            )}
                             <button
                               onClick={() => handleAction('new')}
                               className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium text-gray-700 border border-gray-200"

@@ -53,6 +53,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
   const [showSynthesiaRestrictions, setShowSynthesiaRestrictions] = useState(false);
   const [showHeyGenRestrictions, setShowHeyGenRestrictions] = useState(false);
   const [showHeyGenConfirmationModal, setShowHeyGenConfirmationModal] = useState(false);
+  const [showSynthesiaConfirmationModal, setShowSynthesiaConfirmationModal] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
   // State for HeyGen validation response
@@ -526,6 +527,53 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
     setUserEmail('');
   };
 
+  // Handler for confirming Synthesia generation
+  const handleConfirmSynthesiaGeneration = async () => {
+    const formData = {
+      avatar_id: avatarId,
+      script,
+      selectedLanguage,
+      voice: voiceId,
+      outputFormat,
+      resolution,
+      platform,
+      videoType: 'avatar_synthesia',
+      email: userEmail
+    };
+
+    console.log('Enviando datos para generar video con Synthesia:', formData);
+
+    try {
+      const response = await fetch('https://n8n.icc-e.org/webhook-test/b3577f4e-827a-481c-8be3-cd38e00166e2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Respuesta del webhook de Synthesia:', response.status, response.statusText);
+
+      if (response.ok) {
+        const responseText = await response.text();
+        console.log('Respuesta del webhook:', responseText);
+        setGeneratedMessage('Solicitud enviada correctamente. Recibirás el video por email una vez generado.');
+      } else {
+        const errorText = await response.text();
+        console.error('Error al enviar datos:', response.statusText, errorText);
+        handleError(new Error(`Error al enviar datos: ${response.statusText}`));
+        showError();
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+      handleError(error);
+      showError();
+    }
+
+    setShowSynthesiaConfirmationModal(false);
+    setUserEmail('');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -646,7 +694,7 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                 🎬 Generar video con HeyGen
               </button>
               <button
-                onClick={handleSendFormDataToWebhook}
+                onClick={() => setShowSynthesiaConfirmationModal(true)}
                 className="flex-1 bg-purple-600 text-white py-3 px-6 rounded-md hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
               >
                 🎥 Generar video con Synthesia
@@ -969,6 +1017,83 @@ const VideoAvatarModal: React.FC<VideoAvatarModalProps> = ({ onClose }) => {
                   onClick={handleConfirmHeyGenGeneration}
                   disabled={!userEmail}
                   className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Confirmar y enviar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Synthesia Confirmation Modal */}
+      {showSynthesiaConfirmationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowSynthesiaConfirmationModal(false)} />
+          <div className="relative max-w-2xl w-full mx-4 bg-white rounded-2xl shadow-udlp-lg ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Confirmar generación de video con Synthesia
+              </h2>
+              <button
+                onClick={() => setShowSynthesiaConfirmationModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                Corrobora los datos antes de enviar. Una vez generado, recibirás el video por email.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Avatar seleccionado</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{avatares.find(a => a.id === selectedAvatar)?.nombre || 'Ninguno'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Script</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded max-h-20 overflow-y-auto">{script || 'Sin script'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedLanguage === 'es' ? 'Español' : selectedLanguage}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Formato</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{outputFormat}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Resolución</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{resolution}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Plataforma</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{plataformas.find(p => p.id === platform)?.nombre || platform}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+                  <input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowSynthesiaConfirmationModal(false)}
+                  className="bg-gray-100 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmSynthesiaGeneration}
+                  disabled={!userEmail}
+                  className="bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   Confirmar y enviar
                 </button>
