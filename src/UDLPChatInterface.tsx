@@ -498,7 +498,9 @@ const UDLPChatInterface = () => {
       }
 
       // 2. Obtener la respuesta del webhook
+      console.log('Respuesta del webhook - Status:', response.status, response.statusText);
       const responseData = await response.json();
+      console.log('Datos de respuesta:', responseData);
 
       // 3. Verificar que la respuesta tenga el formato esperado
       if (!responseData?.ok || !responseData.data?.bot_response) {
@@ -1011,10 +1013,10 @@ const UDLPChatInterface = () => {
             value={formData.mensaje}
             onChange={(e) => handleInputChange('mensaje', e.target.value)}
             rows={3}
-            maxLength={300}
+            maxLength={500}
           />
           <div className="text-right text-xs text-gray-500 mt-1">
-            {formData.mensaje.length}/300
+            {formData.mensaje.length}/500
           </div>
         </div>
 
@@ -1181,7 +1183,7 @@ const UDLPChatInterface = () => {
               </div>
             )}
 
-            <div className={`whitespace-pre-line text-sm text-gray-700 ${(item.format as string).toLowerCase().includes('nota de prensa') || (item.format as string).toLowerCase().includes('instagram') || (item.format as string).toLowerCase().includes('linkedin') ? 'text-left' : ''}`.trim()}>
+            <div className={`whitespace-pre-line text-sm text-gray-700 ${item.format.toLowerCase().includes('nota de prensa') || item.format.toLowerCase().includes('instagram') || item.format.toLowerCase().includes('linkedin') ? 'text-left' : ''}`}>
               {item.content}
             </div>
 
